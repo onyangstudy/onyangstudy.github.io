@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>온양고등학교 개인 맞춤형 학습관리 플랫폼</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (v9 Modular Web Namespace via Compatibility mode for easy single-file usage) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-graduation-cap text-2xl text-amber-400"></i>
+                <h1 class="text-xl font-bold tracking-wide">온양고등학교 학습관리 Platform</h1>
+            </div>
+            <div id="userProfileArea" class="flex items-center space-x-4">
+                <!-- Logged Out State -->
+                <button id="btnLogin" onclick="handleGoogleLogin()" class="hidden bg-amber-400 hover:bg-amber-500 text-indigo-950 font-bold px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
+                    <i class="fa-brands fa-google"></i> 구글 계정 로그인
+                </button>
+                <!-- Logged In State -->
+                <div id="userInfo" class="hidden flex items-center space-x-3">
+                    <span id="txtUserRole" class="text-xs bg-indigo-700 px-2 py-1 rounded text-amber-300 font-semibold">학생</span>
+                    <span id="txtUserName" class="font-medium text-sm">사용자</span>
+                    <button onclick="handleLogout()" class="text-slate-300 hover:text-white text-xs underline">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- 1. AUTH SCREEN: Login Required Banner -->
+        <div id="viewLoginRequired" class="bg-white rounded-2xl p-8 shadow-sm text-center my-12 border border-slate-200">
+            <i class="fa-solid fa-shield-halved text-5xl text-indigo-600 mb-4"></i>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">온양고등학교 학생 로그인</h2>
+            <p class="text-slate-500 max-w-md mx-auto mb-6">서비스를 이용하시려면 학교 구글 계정으로 로그인해 주세요. 첫 로그인 시 관리자 승인 절차가 필요합니다.</p>
+            <button onclick="handleGoogleLogin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition inline-flex items-center gap-2">
+                <i class="fa-brands fa-google text-lg"></i> 구글 계정으로 시작하기
+            </button>
+        </div>
+
+        <!-- 2. AUTH SCREEN: Registration / Approval Pending -->
+        <div id="viewApprovalPending" class="hidden bg-white rounded-2xl p-8 shadow-sm border border-amber-200 text-center my-12">
+            <div id="registrationForm" class="max-w-md mx-auto text-left">
+                <h3 class="text-xl font-bold text-slate-800 mb-4 text-center"><i class="fa-solid fa-user-plus text-indigo-600"></i> 최초 학생 정보 등록</h3>
+                <p class="text-xs text-slate-500 mb-6 text-center">학번과 이름을 올바르게 입력하시면 관리자 승인 요청이 등록됩니다.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">학번 (예: 20101)</label>
+                        <input type="text" id="inputStudentId" placeholder="5자리 학번 입력" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">이름</label>
+                        <input type="text" id="inputStudentName" placeholder="성명 입력" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <button onclick="submitStudentRegistration()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition">승인 요청 제출</button>
+                </div>
+            </div>
+            <div id="pendingStatusNotice" class="hidden">
+                <i class="fa-solid fa-clock text-5xl text-amber-500 mb-4 animate-pulse"></i>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">관리자 승인 대기 중</h2>
+                <p class="text-slate-600 max-w-md mx-auto">등록이 완료되었습니다. 담당 선생님(관리자)의 승인 후 전체 서비스를 이용하실 수 있습니다.</p>
+                <div class="mt-6 p-4 bg-slate-50 rounded-lg inline-block text-sm text-slate-500 text-left">
+                    <p><span class="font-semibold">이름:</span> <span id="txtPendingName">-</span></p>
+                    <p><span class="font-semibold">학번:</span> <span id="txtPendingStudentId">-</span></p>
+                    <p><span class="font-semibold">상태:</span> <span class="text-amber-600 font-bold">승인 대기(Pending)</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MAIN APP VIEW (Approved Users) -->
+        <div id="viewMainApp" class="hidden space-y-6">
+            
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-2 border-b border-slate-200 pb-2">
+                <button onclick="switchTab('tabTimer')" id="btnTabTimer" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-indigo-600 text-white">
+                    <i class="fa-solid fa-stopwatch mr-1"></i> 공부 타이머
+                </button>
+                <button onclick="switchTab('tabPlanner')" id="btnTabPlanner" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-calendar-check mr-1"></i> 주간 플래너
+                </button>
+                <button onclick="switchTab('tabSchoolInfo')" id="btnTabSchoolInfo" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-utensils mr-1"></i> 급식 & 학교 일정
+                </button>
+                <button onclick="switchTab('tabAdmin')" id="btnTabAdmin" class="tab-btn hidden px-4 py-2 rounded-lg font-bold text-sm bg-rose-100 text-rose-700 hover:bg-rose-200">
+                    <i class="fa-solid fa-user-shield mr-1"></i> 관리자 페이지
+                </button>
+            </nav>
+
+            <!-- TAB 1: STUDY TIMER -->
+            <div id="tabTimer" class="tab-content active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Left: Control Panel & Active Display -->
+                    <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                        <span id="timerStatusBadge" class="absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600">대기 중</span>
+
+                        <div class="my-6">
+                            <div id="timerDisplay" class="text-6xl md:text-7xl font-extrabold tracking-tight text-slate-800 font-mono">00:00:00</div>
+                            <p id="timerSubText" class="text-sm text-slate-400 mt-2">목표 시간을 선택하고 학습을 시작하세요.</p>
+                        </div>
+
+                        <!-- Time Setup Controls -->
+                        <div id="timerSetupControls" class="w-full max-w-sm space-y-4">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">목표 시간 선택</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button onclick="setTargetMinutes(30)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">30분</button>
+                                <button onclick="setTargetMinutes(60)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">60분</button>
+                                <button onclick="setTargetMinutes(90)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">90분</button>
+                                <button onclick="setTargetMinutes(120)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">120분</button>
+                            </div>
+                            <button onclick="startStudySession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">공부 시작</button>
+                        </div>
+
+                        <!-- Active Controls -->
+                        <div id="timerActiveControls" class="hidden w-full max-w-sm space-y-3">
+                            <button onclick="completeStudySession()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg">
+                                <i class="fa-solid fa-check-circle mr-2"></i> 공부 완료 및 저장
+                            </button>
+                            <p class="text-xs text-rose-500 font-medium">* 목표 종료 후 <span id="gracePeriodText">15분</span> 초과 시 무효 처리됩니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Info & Rules -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg mb-3"><i class="fa-solid fa-circle-info text-indigo-500"></i> 타이머 유의사항</h3>
+                            <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
+                                <li><strong>서버/시스템 시간 검증:</strong> 타이머는 창을 닫거나 브라우저를 종료해도 백그라운드 기준시간으로 작동합니다.</li>
+                                <li><strong>무효 처리 규칙:</strong> 목표 시간 도달 후 15분 이내에 [공부 완료] 버튼을 누르지 않으면 자동 <span class="text-rose-600 font-bold">무효(INVALID)</span> 처리되어 기록에 반영되지 않습니다.</li>
+                            </ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100">
+                            <div class="text-xs font-semibold text-slate-400">오늘의 누적 성공 학습</div>
+                            <div id="txtTodayTotalStudy" class="text-2xl font-bold text-indigo-600">0분</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: WEEKLY PLANNER -->
+            <div id="tabPlanner" class="tab-content space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">주간 학습 플래너</h3>
+                            <p class="text-xs text-slate-500">주간 목표를 세우고 과목별 투두리스트를 달성해 보세요.</p>
+                        </div>
+                        <!-- Progress Bar -->
+                        <div class="w-full md:w-64 bg-slate-100 p-3 rounded-xl border border-slate-200">
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span>주간 달성률</span>
+                                <span id="txtWeeklyProgress">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                                <div id="barWeeklyProgress" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Task Input -->
+                    <div class="flex gap-2 mb-6">
+                        <input type="text" id="inputTaskContent" placeholder="새로운 공부 할 일을 입력하세요 (예: 수학 2단원 문제풀이)" class="flex-grow px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <button onclick="addTask()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">추가</button>
+                    </div>
+
+                    <!-- Tasks List -->
+                    <div class="space-y-2" id="taskListContainer">
+                        <div class="text-center py-8 text-slate-400 text-sm">등록된 학습 계획이 없습니다.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: MEALS & SCHOOL SCHEDULE -->
+            <div id="tabSchoolInfo" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Left: NEIS Meal Service -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-utensils text-amber-500 mr-2"></i>온양고등학교 급식표</h3>
+                            <span class="text-xs text-slate-400">NEIS API 연동</span>
+                        </div>
+                        <div id="mealLoading" class="text-center py-8 text-slate-400 text-sm">급식 정보를 불러오는 중입니다...</div>
+                        <div id="mealContainer" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Right: School Schedule -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-calendar-days text-indigo-500 mr-2"></i>학교 주요 일정 & 야자 안내</h3>
+                        <div class="space-y-3" id="scheduleContainer">
+                            <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
+                                <div>
+                                    <span class="text-xs font-bold text-indigo-600 block">오늘의 야자(야간자율학습)</span>
+                                    <span class="text-sm font-bold text-slate-800">정상 운영 (19:00 ~ 21:00)</span>
+                                </div>
+                                <span class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold">운영</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <span class="text-xs font-semibold text-slate-500">2026.11.15 (예정)</span>
+                                <h4 class="text-sm font-bold text-slate-700">2학기 기말고사</h4>
+                                <p class="text-xs text-slate-500">시험 기간 집중 학습 관리 주간</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 4: ADMIN PAGE -->
+            <div id="tabAdmin" class="tab-content space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-200">
+                    <h3 class="text-lg font-bold text-rose-900 mb-2"><i class="fa-solid fa-user-shield text-rose-600 mr-2"></i>관리자 회원 승인 센터</h3>
+                    <p class="text-xs text-slate-500 mb-4">가입한 학생들의 승인 상태를 변경할 수 있습니다.</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th class="px-4 py-3">이름</th>
+                                    <th class="px-4 py-3">학번</th>
+                                    <th class="px-4 py-3">이메일</th>
+                                    <th class="px-4 py-3">승인 여부</th>
+                                    <th class="px-4 py-3">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUserList">
+                                <tr><td colspan="5" class="text-center py-4">사용자 목록을 가져오는 중...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="bg-slate-800 text-slate-400 text-xs py-4 text-center mt-auto">
+        <p>온양고등학교 개인 맞춤형 학습관리 플랫폼 &copy; 2026</p>
+    </footer>
+
+    <!-- MAIN APP LOGIC -->
+    <script>
+        // ==========================================
+        // 1. FIREBASE CONFIGURATION (적용된 설정 값)[cite: 3]
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AizaSyC3CMRXagTMM41kMgo1Wkpo30xQ2XF8yGQ",
+            authDomain: "onyangstudyweb.firebaseapp.com",
+            projectId: "onyangstudyweb",
+            storageBucket: "onyangstudyweb.firebasestorage.app",
+            messagingSenderId: "134269096686",
+            appId: "1:134269096686:web:283c629ffe0f76486fd9ff",
+            measurementId: "G-LXSTRDJF1T"
+        };
+
+        // Firebase 초기화
+        let auth, db;
+        let currentUser = null;
+        let currentUserDoc = null;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) {
+            console.warn("Firebase 초기화 중 오류가 발생했습니다.", e);
+        }
+
+        // ==========================================
+        // 2. USER AUTHENTICATION & APPROVAL SYSTEM
+        // ==========================================
+        function handleGoogleLogin() {
+            if (!auth) {
+                alert("Firebase 인증 모듈이 초기화되지 않았습니다.");
+                return;
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => {
+                alert("로그인 중 오류가 발생했습니다: " + error.message);
+            });
+        }
+
+        function handleLogout() {
+            if (auth) auth.signOut();
+            window.location.reload();
+        }
+
+        // Auth State Listener
+        if (auth) {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('btnLogin').classList.add('hidden');
+                    document.getElementById('userInfo').classList.remove('hidden');
+                    document.getElementById('txtUserName').innerText = user.displayName || user.email;
+
+                    // Fetch User Doc from Firestore
+                    const userRef = db.collection('users').doc(user.uid);
+                    const doc = await userRef.get();
+
+                    if (!doc.exists()) {
+                        showView('registration');
+                    } else {
+                        currentUserDoc = doc.data();
+                        document.getElementById('txtUserRole').innerText = currentUserDoc.role === 'admin' ? '관리자' : '학생';
+                        
+                        if (currentUserDoc.role === 'admin') {
+                            document.getElementById('btnTabAdmin').classList.remove('hidden');
+                        }
+
+                        if (currentUserDoc.approved === true) {
+                            showView('app');
+                            initApp();
+                        } else {
+                            document.getElementById('txtPendingName').innerText = currentUserDoc.name;
+                            document.getElementById('txtPendingStudentId').innerText = currentUserDoc.studentId;
+                            showView('pending');
+                        }
+                    }
+                } else {
+                    showView('login');
+                }
+            });
+        }
+
+        async function submitStudentRegistration() {
+            const studentId = document.getElementById('inputStudentId').value.trim();
+            const name = document.getElementById('inputStudentName').value.trim();
+
+            if (!studentId || !name) {
+                alert('학번과 이름을 모두 입력해 주세요.');
+                return;
+            }
+
+            if (auth && currentUser) {
+                await db.collection('users').doc(currentUser.uid).set({
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    name: name,
+                    studentId: studentId,
+                    role: 'student',
+                    approved: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('txtPendingName').innerText = name;
+                document.getElementById('txtPendingStudentId').innerText = studentId;
+                showView('pending');
+            }
+        }
+
+        function showView(viewName) {
+            document.getElementById('viewLoginRequired').classList.add('hidden');
+            document.getElementById('viewApprovalPending').classList.add('hidden');
+            document.getElementById('viewMainApp').classList.add('hidden');
+
+            if (viewName === 'login') document.getElementById('viewLoginRequired').classList.remove('hidden');
+            if (viewName === 'registration') {
+                document.getElementById('viewApprovalPending').classList.remove('hidden');
+                document.getElementById('registrationForm').classList.remove('hidden');
+                document.getElementById('pendingStatusNotice').classList.add('hidden');
+            }
+            if (viewName === 'pending') {
+                document.getElementById('viewApprovalPending').classList.remove('hidden');
+                document.getElementById('registrationForm').classList.add('hidden');
+                document.getElementById('pendingStatusNotice').classList.remove('hidden');
+            }
+            if (viewName === 'app') document.getElementById('viewMainApp').classList.remove('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-indigo-600', 'text-white');
+                el.classList.add('text-slate-600');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
+                activeBtn.classList.remove('text-slate-600');
+            }
+
+            if (tabId === 'tabAdmin') loadAdminUserList();
+        }
+
+        function initApp() {
+            loadTasks();
+            fetchNeisMeals();
+            checkActiveStudySession();
+        }
+
+        // ==========================================
+        // 3. STUDY TIMER LOGIC
+        // ==========================================
+        let selectedMinutes = 30;
+        let timerInterval = null;
+        const GRACE_PERIOD_MINUTES = 15;
+
+        function setTargetMinutes(mins) {
+            selectedMinutes = mins;
+            document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600'));
+            event.target.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+        }
+
+        function startStudySession() {
+            const now = Date.now();
+            const targetEndTime = now + (selectedMinutes * 60 * 1000);
+
+            const sessionData = {
+                startTime: now,
+                targetMinutes: selectedMinutes,
+                expectedEndTime: targetEndTime,
+                status: 'IN_PROGRESS'
+            };
+
+            localStorage.setItem('onyang_active_session', JSON.stringify(sessionData));
+            updateTimerUI();
+        }
+
+        function checkActiveStudySession() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimerUI, 1000);
+            updateTimerUI();
+        }
+
+        function updateTimerUI() {
+            const sessionRaw = localStorage.getItem('onyang_active_session');
+            const display = document.getElementById('timerDisplay');
+            const badge = document.getElementById('timerStatusBadge');
+            const setupControls = document.getElementById('timerSetupControls');
+            const activeControls = document.getElementById('timerActiveControls');
+
+            if (!sessionRaw) {
+                display.innerText = "00:00:00";
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600";
+                badge.innerText = "대기 중";
+                setupControls.classList.remove('hidden');
+                activeControls.classList.add('hidden');
+                return;
+            }
+
+            const session = JSON.parse(sessionRaw);
+            const now = Date.now();
+            const elapsedMs = now - session.startTime;
+            const targetMs = session.targetMinutes * 60 * 1000;
+            const gracePeriodMs = GRACE_PERIOD_MINUTES * 60 * 1000;
+
+            setupControls.classList.add('hidden');
+            activeControls.classList.remove('hidden');
+
+            if (now > session.expectedEndTime + gracePeriodMs) {
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-rose-100 text-rose-600";
+                badge.innerText = "무효 처리됨 (시간 초과)";
+                display.innerText = "EXPIRED";
+                
+                alert("목표 종료 시간보다 15분이 초과될 때까지 완료 버튼을 누르지 않아 해당 학습 기록이 무효 처리되었습니다.");
+                
+                saveStudyLog(session, 'INVALID');
+                localStorage.removeItem('onyang_active_session');
+                return;
+            }
+
+            if (now >= session.expectedEndTime) {
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 animate-bounce";
+                badge.innerText = "목표 달성! 완료 버튼을 눌러주세요";
+            } else {
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-600";
+                badge.innerText = "공부 진행 중";
+            }
+
+            const diffSec = Math.floor(Math.abs(targetMs - elapsedMs) / 1000);
+            const hrs = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+            const secs = String(diffSec % 60).padStart(2, '0');
+
+            if (now >= session.expectedEndTime) {
+                display.innerText = `+${hrs}:${mins}:${secs}`;
+            } else {
+                display.innerText = `${hrs}:${mins}:${secs}`;
+            }
+        }
+
+        async function completeStudySession() {
+            const sessionRaw = localStorage.getItem('onyang_active_session');
+            if (!sessionRaw) return;
+
+            const session = JSON.parse(sessionRaw);
+            await saveStudyLog(session, 'COMPLETED');
+            localStorage.removeItem('onyang_active_session');
+            alert(`축하합니다! ${session.targetMinutes}분 공부를 성공적으로 완료했습니다.`);
+            updateTimerUI();
+        }
+
+        async function saveStudyLog(session, status) {
+            if (db && currentUser) {
+                await db.collection('study_logs').add({
+                    uid: currentUser.uid,
+                    startTime: session.startTime,
+                    targetMinutes: session.targetMinutes,
+                    expectedEndTime: session.expectedEndTime,
+                    actualEndTime: Date.now(),
+                    status: status,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
+
+        // ==========================================
+        // 4. WEEKLY PLANNER LOGIC
+        // ==========================================
+        let tasks = [];
+
+        async function loadTasks() {
+            const container = document.getElementById('taskListContainer');
+            if (!db || !currentUser) {
+                renderTasks();
+                return;
+            }
+
+            const snapshot = await db.collection('planners').doc(currentUser.uid).collection('tasks').get();
+            tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderTasks();
+        }
+
+        async function addTask() {
+            const input = document.getElementById('inputTaskContent');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const newTask = {
+                content: content,
+                isCompleted: false,
+                date: new Date().toISOString().slice(0, 10)
+            };
+
+            if (db && currentUser) {
+                const ref = await db.collection('planners').doc(currentUser.uid).collection('tasks').add(newTask);
+                newTask.id = ref.id;
+            }
+            tasks.push(newTask);
+            input.value = '';
+            renderTasks();
+        }
+
+        async function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            task.isCompleted = !task.isCompleted;
+
+            if (db && currentUser) {
+                await db.collection('planners').doc(currentUser.uid).collection('tasks').doc(id).update({
+                    isCompleted: task.isCompleted
+                });
+            }
+            renderTasks();
+        }
+
+        async function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            if (db && currentUser) {
+                await db.collection('planners').doc(currentUser.uid).collection('tasks').doc(id).delete();
+            }
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskListContainer');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">등록된 학습 계획이 없습니다.</div>`;
+                updateWeeklyProgress(0);
+                return;
+            }
+
+            const completedCount = tasks.filter(t => t.isCompleted).length;
+            const progress = Math.round((completedCount / tasks.length) * 100);
+            updateWeeklyProgress(progress);
+
+            container.innerHTML = tasks.map(task => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-200">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="toggleTask('${task.id}')" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+                        <span class="text-sm ${task.isCompleted ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${task.content}</span>
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="text-slate-400 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function updateWeeklyProgress(percent) {
+            document.getElementById('txtWeeklyProgress').innerText = `${percent}%`;
+            document.getElementById('barWeeklyProgress').style.width = `${percent}%`;
+        }
+
+        // ==========================================
+        // 5. NEIS MEAL API INTEGRATION (온양고등학교)
+        // ==========================================
+        async function fetchNeisMeals() {
+            const container = document.getElementById('mealContainer');
+            const loading = document.getElementById('mealLoading');
+
+            const ATPT_OFCDC_SC_CODE = 'N10';
+            const SD_SCHUL_CODE = '8140087';
+            
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mlsnYmd = `${yyyy}${mm}${dd}`;
+
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=${ATPT_OFCDC_SC_CODE}&SD_SCHUL_CODE=${SD_SCHUL_CODE}&MLSV_YMD=${mlsnYmd}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                loading.classList.add('hidden');
+
+                if (data.mealServiceDietInfo) {
+                    const meals = data.mealServiceDietInfo[1].row;
+                    container.innerHTML = meals.map(meal => {
+                        const cleanMenu = meal.DDISH_NM.replace(/<br\/>/g, '\n').replace(/\([0-9\.]+\)/g, '');
+                        return `
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-bold text-amber-900 text-sm">${meal.MMEAL_SC_NM}</span>
+                                    <span class="text-xs text-amber-700">${meal.MLSV_YMD}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${cleanMenu}</p>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 지정된 급식 정보가 없거나 휴무일입니다.</div>`;
+                }
+            } catch (error) {
+                loading.classList.add('hidden');
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오는데 실패했습니다 (NEIS API).</div>`;
+            }
+        }
+
+        // ==========================================
+        // 6. ADMIN USER MANAGEMENT LOGIC
+        // ==========================================
+        async function loadAdminUserList() {
+            const listEl = document.getElementById('adminUserList');
+            if (!db) return;
+
+            const snapshot = await db.collection('users').get();
+            if (snapshot.empty) {
+                listEl.innerHTML = `<tr><td colspan="5" class="text-center py-4">등록된 가입 요청이 없습니다.</td></tr>`;
+                return;
+            }
+
+            listEl.innerHTML = snapshot.docs.map(doc => {
+                const u = doc.data();
+                return `
+                    <tr class="border-b bg-white">
+                        <td class="px-4 py-3 font-medium text-slate-900">${u.name || '-'}</td>
+                        <td class="px-4 py-3">${u.studentId || '-'}</td>
+                        <td class="px-4 py-3">${u.email}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded text-xs font-bold ${u.approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                ${u.approved ? '승인됨' : '대기중'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <button onclick="toggleUserApproval('${u.uid}', ${!u.approved})" class="px-3 py-1 rounded text-xs font-bold text-white ${u.approved ? 'bg-rose-500 hover:bg-rose-600' : 'bg-indigo-600 hover:bg-indigo-700'}">
+                                ${u.approved ? '승인 취소' : '승인하기'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function toggleUserApproval(uid, status) {
+            if (!db) return;
+            await db.collection('users').doc(uid).update({ approved: status });
+            loadAdminUserList();
+        }
+    </script>
+</body>
+</html>
