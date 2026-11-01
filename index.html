@@ -8,11 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase JS SDK (v9 Compat - 가장 안정적인 호환 라이브러리) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -32,14 +27,14 @@
             </div>
             <div id="userProfileArea" class="flex items-center space-x-4">
                 <!-- Logged Out State -->
-                <button id="btnLogin" onclick="handleGoogleLogin()" class="bg-amber-400 hover:bg-amber-500 text-indigo-950 font-bold px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
+                <button id="btnLogin" onclick="window.handleGoogleLogin()" class="hidden bg-amber-400 hover:bg-amber-500 text-indigo-950 font-bold px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
                     <i class="fa-brands fa-google"></i> 구글 계정 로그인
                 </button>
                 <!-- Logged In State -->
                 <div id="userInfo" class="hidden flex items-center space-x-3">
                     <span id="txtUserRole" class="text-xs bg-indigo-700 px-2 py-1 rounded text-amber-300 font-semibold">학생</span>
                     <span id="txtUserName" class="font-medium text-sm">사용자</span>
-                    <button onclick="handleLogout()" class="text-slate-300 hover:text-white text-xs underline">로그아웃</button>
+                    <button onclick="window.handleLogout()" class="text-slate-300 hover:text-white text-xs underline">로그아웃</button>
                 </div>
             </div>
         </div>
@@ -53,7 +48,7 @@
             <i class="fa-solid fa-shield-halved text-5xl text-indigo-600 mb-4"></i>
             <h2 class="text-2xl font-bold text-slate-800 mb-2">온양고등학교 학생 로그인</h2>
             <p class="text-slate-500 max-w-md mx-auto mb-6">서비스를 이용하시려면 학교 구글 계정으로 로그인해 주세요. 첫 로그인 시 관리자 승인 절차가 필요합니다.</p>
-            <button onclick="handleGoogleLogin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition inline-flex items-center gap-2">
+            <button onclick="window.handleGoogleLogin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition inline-flex items-center gap-2">
                 <i class="fa-brands fa-google text-lg"></i> 구글 계정으로 시작하기
             </button>
         </div>
@@ -72,7 +67,7 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-1">이름</label>
                         <input type="text" id="inputStudentName" placeholder="성명 입력" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
-                    <button onclick="submitStudentRegistration()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition">승인 요청 제출</button>
+                    <button onclick="window.submitStudentRegistration()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition">승인 요청 제출</button>
                 </div>
             </div>
             <div id="pendingStatusNotice" class="hidden">
@@ -92,16 +87,16 @@
             
             <!-- Navigation Tabs -->
             <nav class="flex space-x-2 border-b border-slate-200 pb-2">
-                <button onclick="switchTab('tabTimer')" id="btnTabTimer" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-indigo-600 text-white">
+                <button onclick="window.switchTab('tabTimer')" id="btnTabTimer" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-indigo-600 text-white">
                     <i class="fa-solid fa-stopwatch mr-1"></i> 공부 타이머
                 </button>
-                <button onclick="switchTab('tabPlanner')" id="btnTabPlanner" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
+                <button onclick="window.switchTab('tabPlanner')" id="btnTabPlanner" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
                     <i class="fa-solid fa-calendar-check mr-1"></i> 주간 플래너
                 </button>
-                <button onclick="switchTab('tabSchoolInfo')" id="btnTabSchoolInfo" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
+                <button onclick="window.switchTab('tabSchoolInfo')" id="btnTabSchoolInfo" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
                     <i class="fa-solid fa-utensils mr-1"></i> 급식 & 학교 일정
                 </button>
-                <button onclick="switchTab('tabAdmin')" id="btnTabAdmin" class="tab-btn hidden px-4 py-2 rounded-lg font-bold text-sm bg-rose-100 text-rose-700 hover:bg-rose-200">
+                <button onclick="window.switchTab('tabAdmin')" id="btnTabAdmin" class="tab-btn hidden px-4 py-2 rounded-lg font-bold text-sm bg-rose-100 text-rose-700 hover:bg-rose-200">
                     <i class="fa-solid fa-user-shield mr-1"></i> 관리자 페이지
                 </button>
             </nav>
@@ -120,16 +115,16 @@
                         <div id="timerSetupControls" class="w-full max-w-sm space-y-4">
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">목표 시간 선택</label>
                             <div class="grid grid-cols-4 gap-2">
-                                <button onclick="setTargetMinutes(30)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">30분</button>
-                                <button onclick="setTargetMinutes(60)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">60분</button>
-                                <button onclick="setTargetMinutes(90)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">90분</button>
-                                <button onclick="setTargetMinutes(120)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">120분</button>
+                                <button onclick="window.setTargetMinutes(30)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">30분</button>
+                                <button onclick="window.setTargetMinutes(60)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">60분</button>
+                                <button onclick="window.setTargetMinutes(90)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">90분</button>
+                                <button onclick="window.setTargetMinutes(120)" class="target-btn border border-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 hover:border-indigo-500">120분</button>
                             </div>
-                            <button onclick="startStudySession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">공부 시작</button>
+                            <button onclick="window.startStudySession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">공부 시작</button>
                         </div>
 
                         <div id="timerActiveControls" class="hidden w-full max-w-sm space-y-3">
-                            <button onclick="completeStudySession()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg">
+                            <button onclick="window.completeStudySession()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg">
                                 <i class="fa-solid fa-check-circle mr-2"></i> 공부 완료 및 저장
                             </button>
                             <p class="text-xs text-rose-500 font-medium">* 목표 종료 후 <span id="gracePeriodText">15분</span> 초과 시 무효 처리됩니다.</p>
@@ -169,7 +164,7 @@
 
                     <div class="flex gap-2 mb-6">
                         <input type="text" id="inputTaskContent" placeholder="새로운 공부 할 일을 입력하세요 (예: 수학 2단원 문제풀이)" class="flex-grow px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
-                        <button onclick="addTask()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">추가</button>
+                        <button onclick="window.addTask()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">추가</button>
                     </div>
 
                     <div class="space-y-2" id="taskListContainer">
@@ -244,54 +239,57 @@
         <p>온양고등학교 개인 맞춤형 학습관리 플랫폼 &copy; 2026</p>
     </footer>
 
-    <!-- SCRIPT (Compat Standard JavaScript) -->
-    <script>
-        // 1. Firebase Config Setup
+    <!-- Firebase SDK & Module Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyC3CMRXagTMM41kMgo1Wkpo30xQ2XF8yGQ",
             authDomain: "onyangstudyweb.firebaseapp.com",
             projectId: "onyangstudyweb",
             storageBucket: "onyangstudyweb.firebasestorage.app",
             messagingSenderId: "134269096686",
-            appId: "1:134269096686:web:283c629ffe0f76486fd9ff",
-            measurementId: "G-LXSTRDJF1T"
+            appId: "1:134269096686:web:34f4bde5c99bc2846fd9ff",
+            measurementId: "G-16H3N71KEP"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         let currentUser = null;
         let currentUserDoc = null;
 
-        // Auth handlers
-        function handleGoogleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(function(error) {
+        window.handleGoogleLogin = function() {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch(error => {
                 alert("로그인 에러: " + error.message);
             });
-        }
+        };
 
-        function handleLogout() {
-            auth.signOut().then(function() {
+        window.handleLogout = function() {
+            signOut(auth).then(() => {
                 window.location.reload();
             });
-        }
+        };
 
-        // Auth Observer
-        auth.onAuthStateChanged(function(user) {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('btnLogin').classList.add('hidden');
                 document.getElementById('userInfo').classList.remove('hidden');
                 document.getElementById('txtUserName').innerText = user.displayName || user.email;
 
-                db.collection('users').doc(user.uid).get().then(function(doc) {
-                    if (!doc.exists) {
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const docSnap = await getDoc(userRef);
+
+                    if (!docSnap.exists()) {
                         showView('registration');
                     } else {
-                        currentUserDoc = doc.data();
+                        currentUserDoc = docSnap.data();
                         document.getElementById('txtUserRole').innerText = (currentUserDoc.role === 'admin') ? '관리자' : '학생';
                         
                         if (currentUserDoc.role === 'admin') {
@@ -307,15 +305,15 @@
                             showView('pending');
                         }
                     }
-                }).catch(function(err) {
+                } catch (err) {
                     console.error(err);
-                });
+                }
             } else {
                 showView('login');
             }
         });
 
-        function submitStudentRegistration() {
+        window.submitStudentRegistration = async function() {
             const studentId = document.getElementById('inputStudentId').value.trim();
             const name = document.getElementById('inputStudentName').value.trim();
 
@@ -325,21 +323,20 @@
             }
 
             if (currentUser) {
-                db.collection('users').doc(currentUser.uid).set({
+                await setDoc(doc(db, 'users', currentUser.uid), {
                     uid: currentUser.uid,
                     email: currentUser.email,
                     name: name,
                     studentId: studentId,
                     role: 'student',
                     approved: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(function() {
-                    document.getElementById('txtPendingName').innerText = name;
-                    document.getElementById('txtPendingStudentId').innerText = studentId;
-                    showView('pending');
+                    createdAt: serverTimestamp()
                 });
+                document.getElementById('txtPendingName').innerText = name;
+                document.getElementById('txtPendingStudentId').innerText = studentId;
+                showView('pending');
             }
-        }
+        };
 
         function showView(viewName) {
             document.getElementById('viewLoginRequired').classList.add('hidden');
@@ -360,9 +357,9 @@
             if (viewName === 'app') document.getElementById('viewMainApp').classList.remove('hidden');
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
-            document.querySelectorAll('.tab-btn').forEach(function(el) {
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-indigo-600', 'text-white');
                 el.classList.add('text-slate-600');
             });
@@ -375,7 +372,7 @@
             }
 
             if (tabId === 'tabAdmin') loadAdminUserList();
-        }
+        };
 
         function initApp() {
             loadTasks();
@@ -383,20 +380,20 @@
             checkActiveStudySession();
         }
 
-        // Study Timer Logic
+        // Timer Logic
         let selectedMinutes = 30;
         let timerInterval = null;
         const GRACE_PERIOD_MINUTES = 15;
 
-        function setTargetMinutes(mins) {
+        window.setTargetMinutes = function(mins) {
             selectedMinutes = mins;
-            document.querySelectorAll('.target-btn').forEach(function(b) {
+            document.querySelectorAll('.target-btn').forEach(b => {
                 b.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
             });
             event.target.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
-        }
+        };
 
-        function startStudySession() {
+        window.startStudySession = function() {
             const now = Date.now();
             const targetEndTime = now + (selectedMinutes * 60 * 1000);
             const sessionData = {
@@ -407,7 +404,7 @@
             };
             localStorage.setItem('onyang_active_session', JSON.stringify(sessionData));
             checkActiveStudySession();
-        }
+        };
 
         function checkActiveStudySession() {
             if (timerInterval) clearInterval(timerInterval);
@@ -463,50 +460,45 @@
             const mins = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
             const secs = String(diffSec % 60).padStart(2, '0');
 
-            display.innerText = (now >= session.expectedEndTime) ? "+" + hrs + ":" + mins + ":" + secs : hrs + ":" + mins + ":" + secs;
+            display.innerText = (now >= session.expectedEndTime) ? `+${hrs}:${mins}:${secs}` : `${hrs}:${mins}:${secs}`;
         }
 
-        function completeStudySession() {
+        window.completeStudySession = async function() {
             const sessionRaw = localStorage.getItem('onyang_active_session');
             if (!sessionRaw) return;
 
             const session = JSON.parse(sessionRaw);
-            saveStudyLog(session, 'COMPLETED').then(function() {
-                localStorage.removeItem('onyang_active_session');
-                alert("축하합니다! " + session.targetMinutes + "분 공부를 성공적으로 완료했습니다.");
-                checkActiveStudySession();
-            });
-        }
+            await saveStudyLog(session, 'COMPLETED');
+            localStorage.removeItem('onyang_active_session');
+            alert(`축하합니다! ${session.targetMinutes}분 공부를 성공적으로 완료했습니다.`);
+            checkActiveStudySession();
+        };
 
-        function saveStudyLog(session, status) {
+        async function saveStudyLog(session, status) {
             if (currentUser) {
-                return db.collection('study_logs').add({
+                await addDoc(collection(db, 'study_logs'), {
                     uid: currentUser.uid,
                     startTime: session.startTime,
                     targetMinutes: session.targetMinutes,
                     expectedEndTime: session.expectedEndTime,
                     actualEndTime: Date.now(),
                     status: status,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: serverTimestamp()
                 });
             }
-            return Promise.resolve();
         }
 
         // Planner Tasks Logic
         let tasks = [];
 
-        function loadTasks() {
+        async function loadTasks() {
             if (!currentUser) return;
-            db.collection('planners').doc(currentUser.uid).collection('tasks').get().then(function(snapshot) {
-                tasks = snapshot.docs.map(function(doc) {
-                    return Object.assign({ id: doc.id }, doc.data());
-                });
-                renderTasks();
-            });
+            const querySnapshot = await getDocs(collection(db, 'planners', currentUser.uid, 'tasks'));
+            tasks = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderTasks();
         }
 
-        function addTask() {
+        window.addTask = async function() {
             const input = document.getElementById('inputTaskContent');
             const content = input.value.trim();
             if (!content) return;
@@ -518,136 +510,138 @@
             };
 
             if (currentUser) {
-                db.collection('planners').doc(currentUser.uid).collection('tasks').add(newTask).then(function(ref) {
-                    newTask.id = ref.id;
-                    tasks.push(newTask);
-                    input.value = '';
-                    renderTasks();
-                });
+                const ref = await addDoc(collection(db, 'planners', currentUser.uid, 'tasks'), newTask);
+                newTask.id = ref.id;
             }
-        }
+            tasks.push(newTask);
+            input.value = '';
+            renderTasks();
+        };
 
-        function toggleTask(id) {
-            const task = tasks.find(function(t) { return t.id === id; });
+        window.toggleTask = async function(id) {
+            const task = tasks.find(t => t.id === id);
             if (!task) return;
             task.isCompleted = !task.isCompleted;
 
             if (currentUser) {
-                db.collection('planners').doc(currentUser.uid).collection('tasks').doc(id).update({
+                await updateDoc(doc(db, 'planners', currentUser.uid, 'tasks', id), {
                     isCompleted: task.isCompleted
-                }).then(function() {
-                    renderTasks();
                 });
             }
-        }
+            renderTasks();
+        };
 
-        function deleteTask(id) {
-            tasks = tasks.filter(function(t) { return t.id !== id; });
+        window.deleteTask = async function(id) {
+            tasks = tasks.filter(t => t.id !== id);
             if (currentUser) {
-                db.collection('planners').doc(currentUser.uid).collection('tasks').doc(id).delete().then(function() {
-                    renderTasks();
-                });
+                await deleteDoc(doc(db, 'planners', currentUser.uid, 'tasks', id));
             }
-        }
+            renderTasks();
+        };
 
         function renderTasks() {
             const container = document.getElementById('taskListContainer');
             if (tasks.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">등록된 학습 계획이 없습니다.</div>';
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">등록된 학습 계획이 없습니다.</div>`;
                 updateWeeklyProgress(0);
                 return;
             }
 
-            const completedCount = tasks.filter(function(t) { return t.isCompleted; }).length;
+            const completedCount = tasks.filter(t => t.isCompleted).length;
             const progress = Math.round((completedCount / tasks.length) * 100);
             updateWeeklyProgress(progress);
 
-            container.innerHTML = tasks.map(function(task) {
-                return '<div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-200">' +
-                    '<div class="flex items-center space-x-3">' +
-                        '<input type="checkbox" ' + (task.isCompleted ? 'checked' : '') + ' onchange="toggleTask(\'' + task.id + '\')" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">' +
-                        '<span class="text-sm ' + (task.isCompleted ? 'line-through text-slate-400' : 'text-slate-800 font-medium') + '">' + task.content + '</span>' +
-                    '</div>' +
-                    '<button onclick="deleteTask(\'' + task.id + '\')" class="text-slate-400 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>' +
-                '</div>';
-            }).join('');
+            container.innerHTML = tasks.map(task => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-200">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="window.toggleTask('${task.id}')" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+                        <span class="text-sm ${task.isCompleted ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${task.content}</span>
+                    </div>
+                    <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
         }
 
         function updateWeeklyProgress(percent) {
-            document.getElementById('txtWeeklyProgress').innerText = percent + '%';
-            document.getElementById('barWeeklyProgress').style.width = percent + '%';
+            document.getElementById('txtWeeklyProgress').innerText = `${percent}%`;
+            document.getElementById('barWeeklyProgress').style.width = `${percent}%`;
         }
 
         // NEIS Meal API
-        function fetchNeisMeals() {
+        async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const mlsnYmd = yyyy + mm + dd;
+            const mlsnYmd = `${yyyy}${mm}${dd}`;
 
-            const apiUrl = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140087&MLSV_YMD=' + mlsnYmd;
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140087&MLSV_YMD=${mlsnYmd}`;
 
-            fetch(apiUrl).then(function(res) { return res.json(); }).then(function(data) {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
                 loading.classList.add('hidden');
+
                 if (data.mealServiceDietInfo) {
                     const meals = data.mealServiceDietInfo[1].row;
-                    container.innerHTML = meals.map(function(meal) {
+                    container.innerHTML = meals.map(meal => {
                         const cleanMenu = meal.DDISH_NM.replace(/<br\/>/g, '\n').replace(/\([0-9\.]+\)/g, '');
-                        return '<div class="p-4 bg-amber-50 rounded-xl border border-amber-200">' +
-                            '<div class="flex justify-between items-center mb-2">' +
-                                '<span class="font-bold text-amber-900 text-sm">' + meal.MMEAL_SC_NM + '</span>' +
-                                '<span class="text-xs text-amber-700">' + meal.MLSV_YMD + '</span>' +
-                            '</div>' +
-                            '<p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">' + cleanMenu + '</p>' +
-                        '</div>';
+                        return `
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-bold text-amber-900 text-sm">${meal.MMEAL_SC_NM}</span>
+                                    <span class="text-xs text-amber-700">${meal.MLSV_YMD}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${cleanMenu}</p>
+                            </div>
+                        `;
                     }).join('');
                 } else {
-                    container.innerHTML = '<div class="text-center py-6 text-slate-400 text-sm">오늘 지정된 급식 정보가 없거나 휴무일입니다.</div>';
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 지정된 급식 정보가 없거나 휴무일입니다.</div>`;
                 }
-            }).catch(function() {
+            } catch (error) {
                 loading.classList.add('hidden');
-                container.innerHTML = '<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오는데 실패했습니다.</div>';
-            });
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오는데 실패했습니다.</div>`;
+            }
         }
 
         // Admin User List
-        function loadAdminUserList() {
+        async function loadAdminUserList() {
             const listEl = document.getElementById('adminUserList');
-            db.collection('users').get().then(function(snapshot) {
-                if (snapshot.empty) {
-                    listEl.innerHTML = '<tr><td colspan="5" class="text-center py-4">등록된 가입 요청이 없습니다.</td></tr>';
-                    return;
-                }
+            const querySnapshot = await getDocs(collection(db, 'users'));
+            if (querySnapshot.empty) {
+                listEl.innerHTML = `<tr><td colspan="5" class="text-center py-4">등록된 가입 요청이 없습니다.</td></tr>`;
+                return;
+            }
 
-                listEl.innerHTML = snapshot.docs.map(function(doc) {
-                    const u = doc.data();
-                    return '<tr class="border-b bg-white">' +
-                        '<td class="px-4 py-3 font-medium text-slate-900">' + (u.name || '-') + '</td>' +
-                        '<td class="px-4 py-3">' + (u.studentId || '-') + '</td>' +
-                        '<td class="px-4 py-3">' + u.email + '</td>' +
-                        '<td class="px-4 py-3">' +
-                            '<span class="px-2 py-1 rounded text-xs font-bold ' + (u.approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700') + '">' +
-                                (u.approved ? '승인됨' : '대기중') +
-                            '</span>' +
-                        '</td>' +
-                        '<td class="px-4 py-3">' +
-                            '<button onclick="toggleUserApproval(\'' + u.uid + '\', ' + (!u.approved) + ')" class="px-3 py-1 rounded text-xs font-bold text-white ' + (u.approved ? 'bg-rose-500 hover:bg-rose-600' : 'bg-indigo-600 hover:bg-indigo-700') + '">' +
-                                (u.approved ? '승인 취소' : '승인하기') +
-                            '</button>' +
-                        '</td>' +
-                    '</tr>';
-                }).join('');
-            });
+            listEl.innerHTML = querySnapshot.docs.map(d => {
+                const u = d.data();
+                return `
+                    <tr class="border-b bg-white">
+                        <td class="px-4 py-3 font-medium text-slate-900">${u.name || '-'}</td>
+                        <td class="px-4 py-3">${u.studentId || '-'}</td>
+                        <td class="px-4 py-3">${u.email}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded text-xs font-bold ${u.approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                ${u.approved ? '승인됨' : '대기중'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <button onclick="window.toggleUserApproval('${u.uid}', ${!u.approved})" class="px-3 py-1 rounded text-xs font-bold text-white ${u.approved ? 'bg-rose-500 hover:bg-rose-600' : 'bg-indigo-600 hover:bg-indigo-700'}">
+                                ${u.approved ? '승인 취소' : '승인하기'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        function toggleUserApproval(uid, status) {
-            db.collection('users').doc(uid).update({ approved: status }).then(function() {
-                loadAdminUserList();
-            });
-        }
+        window.toggleUserApproval = async function(uid, status) {
+            await updateDoc(doc(db, 'users', uid), { approved: status });
+            loadAdminUserList();
+        };
     </script>
 </body>
 </html>
