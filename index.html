@@ -361,7 +361,7 @@
                         }
                     }
                 } catch (err) {
-                    console.error("Auth State Error:", err);
+                    console.error("Auth Error:", err);
                 }
             } else {
                 showView('login');
@@ -674,20 +674,19 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API (Onyang High School Correct Code: 7430043, +1 day offset shift) ---
+        // --- NEIS MEAL API (공식 규격 대조 적용) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
             
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + 1);
-
-            const yyyy = targetDate.getFullYear();
-            const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
-            const dd = String(targetDate.getDate()).padStart(2, '0');
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
             const apiKey = "2384316c27554b269d122326f94a79d6";
+            // 공식 권장 인자: ATPT_OFCDC_SC_CODE (시도교육청코드), SD_SCHUL_CODE (행정표준코드) 반영
             const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=7430043&MLSV_YMD=${mlsnYmd}`;
 
             try {
@@ -703,14 +702,15 @@
                             <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-2">
                                     <span class="font-bold text-amber-900 text-sm">${meal.MMEAL_SC_NM}</span>
-                                    <span class="text-xs text-amber-700">오늘의 급식</span>
+                                    <span class="text-xs text-amber-700">${meal.MLSV_YMD}</span>
                                 </div>
                                 <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-medium">${cleanMenu}</p>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 등록된 급식 정보가 없거나 휴무일입니다.</div>`;
+                    // INFO-200 (해당하는 데이터가 없습니다) 또는 데이터 미등록/주말인 경우 처리
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘(${yyyy}-${mm}-${dd}) 등록된 급식 정보가 없거나 주말/휴무일입니다.</div>`;
                 }
             } catch (error) {
                 console.error("Meal API Error:", error);
@@ -758,7 +758,7 @@
                     </div>
                 `;
             } catch (err) {
-                console.error("Schedule Load Error:", err);
+                console.error("Schedule Error:", err);
             }
         }
 
