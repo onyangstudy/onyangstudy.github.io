@@ -241,3 +241,576 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">주요 일정 (제목)</label>
                                 <input type="text" id="adminScheduleTitle" placeholder="예: 2학기 기말고사" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 outline-none">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">주요 일정 (날짜 및 상세)</label>
+                                <input type="text" id="adminScheduleDetail" placeholder="예: 2026.11.15 / 시험 기간 집중 학습" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+                            </div>
+                            <div class="md:col-span-2">
+                                <button onclick="window.saveSchoolInfoSettings()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition">안내 및 일정 업데이트</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-200">
+
+                    <div>
+                        <h3 class="text-lg font-bold text-rose-900 mb-2"><i class="fa-solid fa-user-shield text-rose-600 mr-2"></i>관리자 회원 승인 센터</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-4 py-3">이름</th>
+                                        <th class="px-4 py-3">학번</th>
+                                        <th class="px-4 py-3">이메일</th>
+                                        <th class="px-4 py-3">승인 여부</th>
+                                        <th class="px-4 py-3">관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminUserList">
+                                    <tr><td colspan="5" class="text-center py-4">사용자 목록을 가져오는 중...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="bg-slate-800 text-slate-400 text-xs py-4 text-center mt-auto">
+        <p>온양고등학교 개인 맞춤형 학습관리 플랫폼 &copy; 2026</p>
+    </footer>
+
+    <!-- Firebase SDK & Module Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnIe9zIgU-VnDkr8spJKjbsXOLGN3hMkA",
+            authDomain: "onyangstudyweb.firebaseapp.com",
+            projectId: "onyangstudyweb",
+            storageBucket: "onyangstudyweb.firebasestorage.app",
+            messagingSenderId: "134269096686",
+            appId: "1:134269096686:web:34f4bde5c99bc2846fd9ff",
+            measurementId: "G-16H3N71KEP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentUserDoc = null;
+
+        function getLogicalDateKey() {
+            const now = new Date();
+            if (now.getHours() < 3) {
+                now.setDate(now.getDate() - 1);
+            }
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        window.handleGoogleLogin = function() {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch(error => {
+                alert("로그인 에러: " + error.message);
+            });
+        };
+
+        window.handleLogout = function() {
+            signOut(auth).then(() => {
+                window.location.reload();
+            });
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('btnLogin').classList.add('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('txtUserName').innerText = user.displayName || user.email;
+
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const docSnap = await getDoc(userRef);
+
+                    if (!docSnap.exists()) {
+                        showView('registration');
+                    } else {
+                        currentUserDoc = docSnap.data();
+                        document.getElementById('txtUserRole').innerText = (currentUserDoc.role === 'admin') ? '관리자' : '학생';
+                        
+                        if (currentUserDoc.role === 'admin') {
+                            document.getElementById('btnTabAdmin').classList.remove('hidden');
+                        }
+
+                        if (currentUserDoc.approved === true) {
+                            showView('app');
+                            initApp();
+                        } else {
+                            document.getElementById('txtPendingName').innerText = currentUserDoc.name || '-';
+                            document.getElementById('txtPendingStudentId').innerText = currentUserDoc.studentId || '-';
+                            showView('pending');
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                showView('login');
+            }
+        });
+
+        window.submitStudentRegistration = async function() {
+            const studentId = document.getElementById('inputStudentId').value.trim();
+            const name = document.getElementById('inputStudentName').value.trim();
+
+            if (!studentId || !name) {
+                alert('학번과 이름을 모두 입력해 주세요.');
+                return;
+            }
+
+            if (currentUser) {
+                await setDoc(doc(db, 'users', currentUser.uid), {
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    name: name,
+                    studentId: studentId,
+                    role: 'student',
+                    approved: false,
+                    createdAt: serverTimestamp()
+                });
+                document.getElementById('txtPendingName').innerText = name;
+                document.getElementById('txtPendingStudentId').innerText = studentId;
+                showView('pending');
+            }
+        };
+
+        function showView(viewName) {
+            document.getElementById('viewLoginRequired').classList.add('hidden');
+            document.getElementById('viewApprovalPending').classList.add('hidden');
+            document.getElementById('viewMainApp').classList.add('hidden');
+
+            if (viewName === 'login') document.getElementById('viewLoginRequired').classList.remove('hidden');
+            if (viewName === 'registration') {
+                document.getElementById('viewApprovalPending').classList.remove('hidden');
+                document.getElementById('registrationForm').classList.remove('hidden');
+                document.getElementById('pendingStatusNotice').classList.add('hidden');
+            }
+            if (viewName === 'pending') {
+                document.getElementById('viewApprovalPending').classList.remove('hidden');
+                document.getElementById('registrationForm').classList.add('hidden');
+                document.getElementById('pendingStatusNotice').classList.remove('hidden');
+            }
+            if (viewName === 'app') document.getElementById('viewMainApp').classList.remove('hidden');
+        }
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-indigo-600', 'text-white');
+                el.classList.add('text-slate-600');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
+                activeBtn.classList.remove('text-slate-600');
+            }
+
+            if (tabId === 'tabAdmin') loadAdminUserList();
+        };
+
+        function initApp() {
+            loadTasks();
+            fetchNeisMeals();
+            loadSchoolInfoSchedule();
+            calculateTodayStudyTime();
+            checkActiveStudySession();
+        }
+
+        let selectedMinutes = 30;
+        let timerInterval = null;
+        const GRACE_PERIOD_MINUTES = 15;
+
+        window.adjustMinutes = function(delta) {
+            let newVal = selectedMinutes + delta;
+            if (newVal < 5) newVal = 5;
+            if (newVal > 300) newVal = 300;
+            setTargetMinutes(newVal);
+        };
+
+        window.setTargetMinutesFromSlider = function(val) {
+            setTargetMinutes(parseInt(val, 10));
+        };
+
+        function setTargetMinutes(mins) {
+            selectedMinutes = mins;
+            document.getElementById('lblTargetMinutes').innerText = `${selectedMinutes}분`;
+            document.getElementById('sliderTargetMinutes').value = selectedMinutes;
+        }
+
+        window.startStudySession = function() {
+            const now = Date.now();
+            const targetEndTime = now + (selectedMinutes * 60 * 1000);
+            const sessionData = {
+                startTime: now,
+                targetMinutes: selectedMinutes,
+                expectedEndTime: targetEndTime,
+                status: 'IN_PROGRESS'
+            };
+            localStorage.setItem('onyang_active_session', JSON.stringify(sessionData));
+            checkActiveStudySession();
+        };
+
+        function checkActiveStudySession() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimerUI, 1000);
+            updateTimerUI();
+        }
+
+        function updateTimerUI() {
+            const sessionRaw = localStorage.getItem('onyang_active_session');
+            const display = document.getElementById('timerDisplay');
+            const badge = document.getElementById('timerStatusBadge');
+            const setupControls = document.getElementById('timerSetupControls');
+            const activeControls = document.getElementById('timerActiveControls');
+            const btnComplete = document.getElementById('btnCompleteSession');
+            const hintText = document.getElementById('activeControlsHint');
+
+            if (!sessionRaw) {
+                display.innerText = "00:00:00";
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600";
+                badge.innerText = "대기 중";
+                setupControls.classList.remove('hidden');
+                activeControls.classList.add('hidden');
+                return;
+            }
+
+            const session = JSON.parse(sessionRaw);
+            const now = Date.now();
+            const elapsedMs = now - session.startTime;
+            const targetMs = session.targetMinutes * 60 * 1000;
+            const gracePeriodMs = GRACE_PERIOD_MINUTES * 60 * 1000;
+
+            setupControls.classList.add('hidden');
+            activeControls.classList.remove('hidden');
+
+            if (now > session.expectedEndTime + gracePeriodMs) {
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-rose-100 text-rose-600";
+                badge.innerText = "무효 처리됨 (시간 초과)";
+                display.innerText = "EXPIRED";
+                alert("목표 종료 시간보다 15분이 초과될 때까지 완료 버튼을 누르지 않아 해당 학습 기록이 무효 처리되었습니다.");
+                saveStudyLog(session, 'INVALID');
+                localStorage.removeItem('onyang_active_session');
+                return;
+            }
+
+            if (now >= session.expectedEndTime) {
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 animate-bounce";
+                badge.innerText = "목표 달성! 완료 및 저장 가능";
+
+                btnComplete.disabled = false;
+                btnComplete.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg cursor-pointer";
+                btnComplete.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> 공부 완료 및 저장`;
+                hintText.innerText = "목표를 달성했습니다! 15분 이내에 [공부 완료 및 저장] 버튼을 누르세요.";
+            } else {
+                badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-600";
+                badge.innerText = "공부 진행 중";
+
+                btnComplete.disabled = true;
+                btnComplete.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3 rounded-xl shadow transition text-lg";
+                btnComplete.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> 공부 진행 중 (완료 불가)`;
+                hintText.innerText = "집중 유지를 위해 목표 시간이 끝날 때까지 완료 버튼을 누를 수 없습니다.";
+            }
+
+            const diffSec = Math.floor(Math.abs(targetMs - elapsedMs) / 1000);
+            const hrs = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+            const secs = String(diffSec % 60).padStart(2, '0');
+
+            display.innerText = (now >= session.expectedEndTime) ? `+${hrs}:${mins}:${secs}` : `${hrs}:${mins}:${secs}`;
+        }
+
+        window.completeStudySession = async function() {
+            const sessionRaw = localStorage.getItem('onyang_active_session');
+            if (!sessionRaw) return;
+
+            const session = JSON.parse(sessionRaw);
+            await saveStudyLog(session, 'COMPLETED');
+            localStorage.removeItem('onyang_active_session');
+            alert(`축하합니다! ${session.targetMinutes}분 공부를 성공적으로 완료하여 순공시간에 저장되었습니다.`);
+            
+            calculateTodayStudyTime();
+            checkActiveStudySession();
+        };
+
+        async function saveStudyLog(session, status) {
+            if (currentUser) {
+                await addDoc(collection(db, 'study_logs'), {
+                    uid: currentUser.uid,
+                    startTime: session.startTime,
+                    targetMinutes: session.targetMinutes,
+                    expectedEndTime: session.expectedEndTime,
+                    actualEndTime: Date.now(),
+                    status: status,
+                    logicalDate: getLogicalDateKey(),
+                    createdAt: serverTimestamp()
+                });
+            }
+        }
+
+        async function calculateTodayStudyTime() {
+            if (!currentUser) return;
+            const todayKey = getLogicalDateKey();
+            const querySnapshot = await getDocs(collection(db, 'study_logs'));
+            
+            let totalMins = 0;
+            querySnapshot.forEach(docSnap => {
+                const log = docSnap.data();
+                if (log.uid === currentUser.uid && log.status === 'COMPLETED') {
+                    const logDateKey = log.logicalDate || new Date(log.startTime).toISOString().slice(0, 10);
+                    if (logDateKey === todayKey) {
+                        totalMins += parseInt(log.targetMinutes, 10) || 0;
+                    }
+                }
+            });
+
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            document.getElementById('txtTodayStudyTime').innerText = `${hrs}시간 ${mins}분`;
+        }
+
+        let tasks = [];
+
+        async function loadTasks() {
+            if (!currentUser) return;
+            const todayKey = getLogicalDateKey();
+            const querySnapshot = await getDocs(collection(db, 'planners', currentUser.uid, 'tasks'));
+            
+            tasks = querySnapshot.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(t => t.dateKey === todayKey);
+            
+            renderTasks();
+        }
+
+        window.addTask = async function() {
+            const input = document.getElementById('inputTaskContent');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const todayKey = getLogicalDateKey();
+            const newTask = {
+                content: content,
+                isCompleted: false,
+                dateKey: todayKey,
+                createdAt: serverTimestamp()
+            };
+
+            if (currentUser) {
+                const ref = await addDoc(collection(db, 'planners', currentUser.uid, 'tasks'), newTask);
+                newTask.id = ref.id;
+            }
+            tasks.push(newTask);
+            input.value = '';
+            renderTasks();
+        };
+
+        window.toggleTask = async function(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            task.isCompleted = !task.isCompleted;
+
+            if (currentUser) {
+                await updateDoc(doc(db, 'planners', currentUser.uid, 'tasks', id), {
+                    isCompleted: task.isCompleted
+                });
+            }
+            renderTasks();
+        };
+
+        window.deleteTask = async function(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            if (currentUser) {
+                await deleteDoc(doc(db, 'planners', currentUser.uid, 'tasks', id));
+            }
+            renderTasks();
+        };
+
+        function renderTasks() {
+            const container = document.getElementById('taskListContainer');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">오늘 등록된 학습 계획이 없습니다.</div>`;
+                updateDailyProgress(0);
+                return;
+            }
+
+            const completedCount = tasks.filter(t => t.isCompleted).length;
+            const progress = Math.round((completedCount / tasks.length) * 100);
+            updateDailyProgress(progress);
+
+            container.innerHTML = tasks.map(task => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-200">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="window.toggleTask('${task.id}')" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+                        <span class="text-sm ${task.isCompleted ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${task.content}</span>
+                    </div>
+                    <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function updateDailyProgress(percent) {
+            document.getElementById('txtDailyProgress').innerText = `${percent}%`;
+            document.getElementById('barDailyProgress').style.width = `${percent}%`;
+        }
+
+        // --- NEIS MEAL API (Onyang High School Correct Code: 7430043) ---
+        async function fetchNeisMeals() {
+            const container = document.getElementById('mealContainer');
+            const loading = document.getElementById('mealLoading');
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mlsnYmd = `${yyyy}${mm}${dd}`;
+
+            const apiKey = "2384316c27554b269d122326f94a79d6";
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=7430043&MLSV_YMD=${mlsnYmd}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                if (loading) loading.classList.add('hidden');
+
+                if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
+                    const meals = data.mealServiceDietInfo[1].row;
+                    container.innerHTML = meals.map(meal => {
+                        const cleanMenu = meal.DDISH_NM.replace(/<br\/>/g, '\n').replace(/\([0-9\.]+\)/g, '');
+                        return `
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 shadow-sm">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-bold text-amber-900 text-sm">${meal.MMEAL_SC_NM}</span>
+                                    <span class="text-xs text-amber-700">${meal.MLSV_YMD}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-medium">${cleanMenu}</p>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘(${yyyy}-${mm}-${dd}) 등록된 급식 정보가 없거나 휴무일입니다.</div>`;
+                }
+            } catch (error) {
+                console.error("Meal API Error:", error);
+                if (loading) loading.classList.add('hidden');
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오는 도중 오류가 발생했습니다.</div>`;
+            }
+        }
+
+        async function loadSchoolInfoSchedule() {
+            const container = document.getElementById('scheduleContainer');
+            try {
+                const docRef = doc(db, 'settings', 'school_info');
+                const docSnap = await getDoc(docRef);
+
+                let yajaStatus = "정상 운영 (19:00 ~ 21:00)";
+                let yajaBadge = "운영";
+                let scheduleTitle = "2학기 기말고사";
+                let scheduleDetail = "2026.11.15 / 시험 기간 집중 학습";
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    yajaStatus = data.yajaStatus || yajaStatus;
+                    yajaBadge = data.yajaBadge || yajaBadge;
+                    scheduleTitle = data.scheduleTitle || scheduleTitle;
+                    scheduleDetail = data.scheduleDetail || scheduleDetail;
+                }
+
+                document.getElementById('adminYajaStatus').value = yajaStatus;
+                document.getElementById('adminYajaBadge').value = yajaBadge;
+                document.getElementById('adminScheduleTitle').value = scheduleTitle;
+                document.getElementById('adminScheduleDetail').value = scheduleDetail;
+
+                container.innerHTML = `
+                    <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-bold text-indigo-600 block">오늘의 야자(야간자율학습)</span>
+                            <span class="text-sm font-bold text-slate-800">${yajaStatus}</span>
+                        </div>
+                        <span class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold">${yajaBadge}</span>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="text-xs font-semibold text-indigo-600 block mb-1"><i class="fa-solid fa-star mr-1"></i>주요 학교 일정</span>
+                        <h4 class="text-sm font-bold text-slate-700">${scheduleTitle}</h4>
+                        <p class="text-xs text-slate-500">${scheduleDetail}</p>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        window.saveSchoolInfoSettings = async function() {
+            const yajaStatus = document.getElementById('adminYajaStatus').value.trim();
+            const yajaBadge = document.getElementById('adminYajaBadge').value.trim();
+            const scheduleTitle = document.getElementById('adminScheduleTitle').value.trim();
+            const scheduleDetail = document.getElementById('adminScheduleDetail').value.trim();
+
+            await setDoc(doc(db, 'settings', 'school_info'), {
+                yajaStatus,
+                yajaBadge,
+                scheduleTitle,
+                scheduleDetail,
+                updatedAt: serverTimestamp()
+            });
+
+            alert('학교 주요 일정 및 야자 정보가 업데이트 되었습니다.');
+            loadSchoolInfoSchedule();
+        };
+
+        async function loadAdminUserList() {
+            const listEl = document.getElementById('adminUserList');
+            const querySnapshot = await getDocs(collection(db, 'users'));
+            if (querySnapshot.empty) {
+                listEl.innerHTML = `<tr><td colspan="5" class="text-center py-4">등록된 가입 요청이 없습니다.</td></tr>`;
+                return;
+            }
+
+            listEl.innerHTML = querySnapshot.docs.map(d => {
+                const u = d.data();
+                return `
+                    <tr class="border-b bg-white">
+                        <td class="px-4 py-3 font-medium text-slate-900">${u.name || '-'}</td>
+                        <td class="px-4 py-3">${u.studentId || '-'}</td>
+                        <td class="px-4 py-3">${u.email}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded text-xs font-bold ${u.approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                ${u.approved ? '승인됨' : '대기중'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <button onclick="window.toggleUserApproval('${u.uid}', ${!u.approved})" class="px-3 py-1 rounded text-xs font-bold text-white ${u.approved ? 'bg-rose-500 hover:bg-rose-600' : 'bg-indigo-600 hover:bg-indigo-700'}">
+                                ${u.approved ? '승인 취소' : '승인하기'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.toggleUserApproval = async function(uid, status) {
+            await updateDoc(doc(db, 'users', uid), { approved: status });
+            loadAdminUserList();
+        };
+    </script>
+</body>
+</html>
