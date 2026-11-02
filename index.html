@@ -306,10 +306,8 @@
         let currentUser = null;
         let currentUserDoc = null;
 
-        // --- Helper Function: Get Custom Logical Date (Resets at 3 AM) ---
         function getLogicalDateKey() {
             const now = new Date();
-            // If current time is before 3 AM, consider it as previous calendar day
             if (now.getHours() < 3) {
                 now.setDate(now.getDate() - 1);
             }
@@ -439,7 +437,6 @@
             checkActiveStudySession();
         }
 
-        // --- 5-MIN INCREMENT TIMER CONTROLS ---
         let selectedMinutes = 30;
         let timerInterval = null;
         const GRACE_PERIOD_MINUTES = 15;
@@ -507,7 +504,6 @@
             setupControls.classList.add('hidden');
             activeControls.classList.remove('hidden');
 
-            // Grace period exceeded -> Auto INVALID
             if (now > session.expectedEndTime + gracePeriodMs) {
                 badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-rose-100 text-rose-600";
                 badge.innerText = "무효 처리됨 (시간 초과)";
@@ -518,7 +514,6 @@
                 return;
             }
 
-            // Target time reached -> ENABLE COMPLETE BUTTON
             if (now >= session.expectedEndTime) {
                 badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 animate-bounce";
                 badge.innerText = "목표 달성! 완료 및 저장 가능";
@@ -528,7 +523,6 @@
                 btnComplete.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> 공부 완료 및 저장`;
                 hintText.innerText = "목표를 달성했습니다! 15분 이내에 [공부 완료 및 저장] 버튼을 누르세요.";
             } else {
-                // Running -> DISABLE COMPLETE BUTTON
                 badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-600";
                 badge.innerText = "공부 진행 중";
 
@@ -574,7 +568,6 @@
             }
         }
 
-        // Calculate Today's Pure Study Time (Reset at 3 AM)
         async function calculateTodayStudyTime() {
             if (!currentUser) return;
             const todayKey = getLogicalDateKey();
@@ -584,7 +577,6 @@
             querySnapshot.forEach(docSnap => {
                 const log = docSnap.data();
                 if (log.uid === currentUser.uid && log.status === 'COMPLETED') {
-                    // Match by 3 AM logical date
                     const logDateKey = log.logicalDate || new Date(log.startTime).toISOString().slice(0, 10);
                     if (logDateKey === todayKey) {
                         totalMins += parseInt(log.targetMinutes, 10) || 0;
@@ -597,7 +589,6 @@
             document.getElementById('txtTodayStudyTime').innerText = `${hrs}시간 ${mins}분`;
         }
 
-        // --- DAILY PLANNER LOGIC (Reset at 3 AM) ---
         let tasks = [];
 
         async function loadTasks() {
@@ -607,7 +598,7 @@
             
             tasks = querySnapshot.docs
                 .map(d => ({ id: d.id, ...d.data() }))
-                .filter(t => t.dateKey === todayKey); // Filter only for today's logical date
+                .filter(t => t.dateKey === todayKey);
             
             renderTasks();
         }
@@ -683,7 +674,7 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API ---
+        // --- NEIS MEAL API WITH YOUR NEW KEY & CORRECT ONYANG HIGH CODE (N100000213) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
@@ -693,7 +684,9 @@
             const dd = String(today.getDate()).padStart(2, '0');
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140087&MLSV_YMD=${mlsnYmd}`;
+            // Your personal API Key & Correct Onyang High School Code (N100000213)
+            const apiKey = "2384316c27554b269d122326f94a79d6";
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=N100000213&MLSV_YMD=${mlsnYmd}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -715,7 +708,7 @@
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 지정된 급식 정보가 없거나 휴무일입니다.</div>`;
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 지정된 급식 정보가 없거나 주말/휴무일입니다.</div>`;
                 }
             } catch (error) {
                 loading.classList.add('hidden');
@@ -723,7 +716,6 @@
             }
         }
 
-        // --- DYNAMIC SCHOOL INFO & YAJA EDITABLE BY ADMIN ---
         async function loadSchoolInfoSchedule() {
             const container = document.getElementById('scheduleContainer');
             try {
@@ -743,7 +735,6 @@
                     scheduleDetail = data.scheduleDetail || scheduleDetail;
                 }
 
-                // Fill Admin Input Fields
                 document.getElementById('adminYajaStatus').value = yajaStatus;
                 document.getElementById('adminYajaBadge').value = yajaBadge;
                 document.getElementById('adminScheduleTitle').value = scheduleTitle;
@@ -786,7 +777,6 @@
             loadSchoolInfoSchedule();
         };
 
-        // --- ADMIN USER LIST MANAGEMENT ---
         async function loadAdminUserList() {
             const listEl = document.getElementById('adminUserList');
             const querySnapshot = await getDocs(collection(db, 'users'));
