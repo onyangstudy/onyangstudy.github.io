@@ -209,7 +209,7 @@
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-utensils text-amber-500 mr-2"></i>온양고등학교 급식표</h3>
-                            <span class="text-xs text-slate-400">NEIS API 연동</span>
+                            <span class="text-xs text-slate-400">NEIS API 연동 (+1일 정보 자동 보정)</span>
                         </div>
                         <div id="mealLoading" class="text-center py-8 text-slate-400 text-sm">급식 정보를 불러오는 중입니다...</div>
                         <div id="mealContainer" class="space-y-4"></div>
@@ -674,14 +674,18 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API (Onyang High School Correct Code: 7430043) ---
+        // --- NEIS MEAL API (+1일 자동 보정 로직 반영) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
+            
+            // NEIS 나이스 식단 등록 오차 보정 (+1일 설정)
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 1);
+
+            const yyyy = targetDate.getFullYear();
+            const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(targetDate.getDate()).padStart(2, '0');
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
             const apiKey = "2384316c27554b269d122326f94a79d6";
@@ -700,14 +704,14 @@
                             <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-2">
                                     <span class="font-bold text-amber-900 text-sm">${meal.MMEAL_SC_NM}</span>
-                                    <span class="text-xs text-amber-700">${meal.MLSV_YMD}</span>
+                                    <span class="text-xs text-amber-700">오늘의 급식</span>
                                 </div>
                                 <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-medium">${cleanMenu}</p>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘(${yyyy}-${mm}-${dd}) 등록된 급식 정보가 없거나 휴무일입니다.</div>`;
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 등록된 급식 정보가 없거나 휴무일입니다.</div>`;
                 }
             } catch (error) {
                 console.error("Meal API Error:", error);
