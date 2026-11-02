@@ -674,7 +674,7 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API WITH YOUR NEW KEY & CORRECT ONYANG HIGH CODE (N100000213) ---
+        // --- NEIS MEAL API (Onyang High School Code: 8140087) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
@@ -684,35 +684,35 @@
             const dd = String(today.getDate()).padStart(2, '0');
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
-            // Your personal API Key & Correct Onyang High School Code (N100000213)
             const apiKey = "2384316c27554b269d122326f94a79d6";
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=N100000213&MLSV_YMD=${mlsnYmd}`;
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140087&MLSV_YMD=${mlsnYmd}`;
 
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                loading.classList.add('hidden');
+                if (loading) loading.classList.add('hidden');
 
-                if (data.mealServiceDietInfo) {
+                if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
                     const meals = data.mealServiceDietInfo[1].row;
                     container.innerHTML = meals.map(meal => {
                         const cleanMenu = meal.DDISH_NM.replace(/<br\/>/g, '\n').replace(/\([0-9\.]+\)/g, '');
                         return `
-                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-2">
                                     <span class="font-bold text-amber-900 text-sm">${meal.MMEAL_SC_NM}</span>
                                     <span class="text-xs text-amber-700">${meal.MLSV_YMD}</span>
                                 </div>
-                                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${cleanMenu}</p>
+                                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-medium">${cleanMenu}</p>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘 지정된 급식 정보가 없거나 주말/휴무일입니다.</div>`;
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘(${yyyy}-${mm}-${dd}) 등록된 급식 정보가 없거나 휴무일입니다.</div>`;
                 }
             } catch (error) {
-                loading.classList.add('hidden');
-                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오는데 실패했습니다.</div>`;
+                console.error("Meal API Error:", error);
+                if (loading) loading.classList.add('hidden');
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오는 도중 오류가 발생했습니다.</div>`;
             }
         }
 
