@@ -209,7 +209,7 @@
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-utensils text-amber-500 mr-2"></i>온양고등학교 급식표</h3>
-                            <span class="text-xs text-slate-400">NEIS API 연동 (+1일 정보 자동 보정)</span>
+                            <span class="text-xs text-slate-400">NEIS API 연동</span>
                         </div>
                         <div id="mealLoading" class="text-center py-8 text-slate-400 text-sm">급식 정보를 불러오는 중입니다...</div>
                         <div id="mealContainer" class="space-y-4"></div>
@@ -361,7 +361,7 @@
                         }
                     }
                 } catch (err) {
-                    console.error(err);
+                    console.error("Auth State Error:", err);
                 }
             } else {
                 showView('login');
@@ -674,12 +674,11 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API (+1일 자동 보정 로직 반영) ---
+        // --- NEIS MEAL API (Onyang High School Correct Code: 7430043, +1 day offset shift) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
             
-            // NEIS 나이스 식단 등록 오차 보정 (+1일 설정)
             const targetDate = new Date();
             targetDate.setDate(targetDate.getDate() + 1);
 
@@ -759,7 +758,7 @@
                     </div>
                 `;
             } catch (err) {
-                console.error(err);
+                console.error("Schedule Load Error:", err);
             }
         }
 
