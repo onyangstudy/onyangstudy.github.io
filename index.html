@@ -674,7 +674,7 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API (공식 규격 대조 적용) ---
+        // --- NEIS MEAL API (온양고등학교 표준 코드 8140061 적용) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
@@ -686,14 +686,12 @@
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
             const apiKey = "2384316c27554b269d122326f94a79d6";
-            // 공식 권장 인자: ATPT_OFCDC_SC_CODE (시도교육청코드), SD_SCHUL_CODE (행정표준코드) 반영
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=7430043&MLSV_YMD=${mlsnYmd}`;
+            // 온양고등학교 진짜 행정표준코드 8140061 적용
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140061&MLSV_YMD=${mlsnYmd}`;
 
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                console.log("NEIS API 원본 응답:", data);
-
                 if (loading) loading.classList.add('hidden');
 
                 if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
@@ -711,9 +709,7 @@
                         `;
                     }).join('');
                 } else {
-                    const errMessage = data.RESULT ? `${data.RESULT.CODE}: ${data.RESULT.MESSAGE}` : "데이터 없음";
-                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">급식 정보를 불러오지 못했습니다.<br><span class="text-xs text-rose-500"></span></div>`;
-                    container.querySelector('span').textContent = `사유: ${errMessage}`;
+                    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">오늘(${yyyy}-${mm}-${dd}) 등록된 급식 정보가 없거나 주말/휴무일입니다.</div>`;
                 }
             } catch (error) {
                 console.error("Meal API Error:", error);
