@@ -674,7 +674,7 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API (Onyang High School Code: 8140087) ---
+        // --- NEIS MEAL API (Onyang High School Code: 8140099) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
@@ -685,7 +685,7 @@
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
             const apiKey = "2384316c27554b269d122326f94a79d6";
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140087&MLSV_YMD=${mlsnYmd}`;
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140099&MLSV_YMD=${mlsnYmd}`;
 
             try {
                 const response = await fetch(apiUrl);
