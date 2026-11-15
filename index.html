@@ -86,12 +86,18 @@
         <div id="viewMainApp" class="hidden space-y-6">
             
             <!-- Navigation Tabs -->
-            <nav class="flex space-x-2 border-b border-slate-200 pb-2">
+            <nav class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
                 <button onclick="window.switchTab('tabTimer')" id="btnTabTimer" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-indigo-600 text-white">
                     <i class="fa-solid fa-stopwatch mr-1"></i> 공부 타이머
                 </button>
                 <button onclick="window.switchTab('tabPlanner')" id="btnTabPlanner" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
                     <i class="fa-solid fa-calendar-check mr-1"></i> 일일 플래너
+                </button>
+                <button onclick="window.switchTab('tabDashboard')" id="btnTabDashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-chart-line mr-1"></i> 내 대시보드
+                </button>
+                <button onclick="window.switchTab('tabLeaderboard')" id="btnTabLeaderboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-trophy mr-1"></i> 순위표
                 </button>
                 <button onclick="window.switchTab('tabSchoolInfo')" id="btnTabSchoolInfo" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200">
                     <i class="fa-solid fa-utensils mr-1"></i> 급식 & 학교 일정
@@ -138,7 +144,7 @@
                             <button onclick="window.startStudySession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">공부 시작</button>
                         </div>
 
-                        <!-- Active Controls: Disabled while running -->
+                        <!-- Active Controls -->
                         <div id="timerActiveControls" class="hidden w-full max-w-sm space-y-3">
                             <button id="btnCompleteSession" onclick="window.completeStudySession()" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3 rounded-xl shadow transition text-lg">
                                 <i class="fa-solid fa-lock mr-2"></i> 공부 진행 중 (완료 불가)
@@ -147,27 +153,41 @@
                         </div>
                     </div>
 
+                    <!-- 1. 타이머 유의사항 (접기/펼치기 간결화) -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg mb-3"><i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> 타이머 유의사항</h3>
-                            <ul class="text-xs text-slate-600 space-y-3 list-none">
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
-                                    <span><strong>중도 종료 불가:</strong> 집중 유지를 위해 타이머 작동 중에는 중간에 공부를 완료하거나 저장을 누를 수 없습니다.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-window-restore text-indigo-500 mt-0.5"></i>
-                                    <span><strong>창 닫기 가능:</strong> 타이머는 서버/백그라운드 시간 기준 작동하므로 브라우저나 폰을 닫아도 시간이 차감됩니다.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
-                                    <span><strong>15분 유예 시간:</strong> 목표 시간 달성 후 15분 내에 완료 버튼을 누르지 않으면 자동 무효 처리됩니다.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-moon text-indigo-700 mt-0.5"></i>
-                                    <span><strong>새벽 3시 리셋:</strong> 매일 새벽 3시가 되면 '오늘의 순공시간'이 0분으로 자동 초기화됩니다.</span>
-                                </li>
-                            </ul>
+                            <h3 class="font-bold text-slate-800 text-lg mb-3 flex items-center justify-between">
+                                <span><i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> 타이머 안내</span>
+                            </h3>
+                            
+                            <details class="group border border-slate-200 rounded-xl p-3 bg-slate-50 cursor-pointer">
+                                <summary class="font-bold text-xs text-slate-700 flex justify-between items-center select-none">
+                                    <span>유의사항 세부 사항 보기</span>
+                                    <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                                </summary>
+                                <ul class="text-xs text-slate-600 space-y-3 list-none mt-3 pt-3 border-t border-slate-200">
+                                    <li class="flex items-start gap-2">
+                                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                                        <span><strong>중도 종료 불가:</strong> 집중 유지를 위해 타이머 작동 중에는 중간에 완료할 수 없습니다.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fa-solid fa-clock text-indigo-500 mt-0.5"></i>
+                                        <span><strong>2시간 이상 타이머:</strong> 1시간마다 중간 점검이 진행되며 15분 내 미확인 시 무효 처리됩니다.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fa-solid fa-window-restore text-indigo-500 mt-0.5"></i>
+                                        <span><strong>창 닫기 가능:</strong> 타이머는 서버/백그라운드 시간 기준 작동하여 브라우저를 닫아도 시간이 차감됩니다.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                                        <span><strong>15분 유예 시간:</strong> 목표 시간 달성 후 15분 내 완료하지 않으면 자동 무효 처리됩니다.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fa-solid fa-moon text-indigo-700 mt-0.5"></i>
+                                        <span><strong>새벽 3시 리셋:</strong> 매일 새벽 3시가 되면 '오늘의 순공시간'이 0분으로 초기화됩니다.</span>
+                                    </li>
+                                </ul>
+                            </details>
                         </div>
                     </div>
                 </div>
@@ -203,7 +223,57 @@
                 </div>
             </div>
 
-            <!-- TAB 3: MEALS & SCHOOL SCHEDULE -->
+            <!-- 2. TAB 3: PERSONAL DASHBOARD (개인별 공부 기록) -->
+            <div id="tabDashboard" class="tab-content space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2"><i class="fa-solid fa-chart-pie text-indigo-600 mr-2"></i>개인별 공부 기록 대시보드</h3>
+                    <p class="text-xs text-slate-500 mb-6">나의 주간, 월간 학습시간과 플래너 목표 100% 달성 기록을 한눈에 확인하세요.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center">
+                            <span class="text-xs font-bold text-slate-500 block mb-1">최근 7일 (주간) 순공시간</span>
+                            <span id="dashWeeklyStudyTime" class="text-3xl font-extrabold text-indigo-600">0시간 0분</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center">
+                            <span class="text-xs font-bold text-slate-500 block mb-1">최근 30일 (월간) 순공시간</span>
+                            <span id="dashMonthlyStudyTime" class="text-3xl font-extrabold text-indigo-600">0시간 0분</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center">
+                            <span class="text-xs font-bold text-slate-500 block mb-1">플래너 100% 달성 일수</span>
+                            <span id="dashPerfectPlannerDays" class="text-3xl font-extrabold text-emerald-600">0 일</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TAB 4: LEADERBOARD (순위표) -->
+            <div id="tabLeaderboard" class="tab-content space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-trophy text-amber-500 mr-2"></i>전체 순공시간 랭킹</h3>
+                            <p class="text-xs text-slate-500">열심히 달리고 있는 친구들의 누적 학습 순위입니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th class="px-4 py-3">순위</th>
+                                    <th class="px-4 py-3">학번 / 이름</th>
+                                    <th class="px-4 py-3">총 누적 순공시간</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardList">
+                                <tr><td colspan="3" class="text-center py-6 text-slate-400">랭킹 데이터를 불러오는 중...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: MEALS & SCHOOL SCHEDULE -->
             <div id="tabSchoolInfo" class="tab-content space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
@@ -218,16 +288,14 @@
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                         <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-calendar-days text-indigo-500 mr-2"></i>학교 주요 일정 & 야자 안내</h3>
                         <div class="space-y-3" id="scheduleContainer">
-                            <!-- Dynamic Content Loaded from Firestore -->
                             <div class="text-center py-8 text-slate-400 text-sm">일정 정보를 불러오는 중...</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 4: ADMIN PAGE -->
+            <!-- TAB 6: ADMIN PAGE -->
             <div id="tabAdmin" class="tab-content space-y-6">
-                <!-- Sub Tab: User Approval & Schedule Settings -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-200 space-y-6">
                     <div>
                         <h3 class="text-lg font-bold text-rose-900 mb-2"><i class="fa-solid fa-sliders text-rose-600 mr-2"></i>학교 일정 & 야자 안내 관리</h3>
@@ -278,6 +346,25 @@
 
     </main>
 
+    <!-- 4. 중간 점검 모달 (2시간 이상 타이머용) -->
+    <div id="modalMidCheck" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4 border border-indigo-100">
+            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800">1시간 경과! 중간 점검</h3>
+            <p class="text-sm text-slate-600 leading-relaxed bg-amber-50 p-3 rounded-xl border border-amber-200">
+                "인간의 최대 집중시간은 45분입니다. 10분 쉬고 공부하는게 어떨까요?"
+            </p>
+            <p class="text-xs text-rose-500 font-semibold">
+                * 15분 이내에 아래 확인 버튼을 누르지 않으면 공부 시간이 자동 무효 처리됩니다.
+            </p>
+            <button onclick="window.confirmMidCheck()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow">
+                확인 및 공부 재개하기
+            </button>
+        </div>
+    </div>
+
     <!-- Global Footer -->
     <footer class="bg-slate-800 text-slate-400 text-xs py-4 text-center mt-auto">
         <p>온양고등학교 개인 맞춤형 학습관리 플랫폼 &copy; 2026</p>
@@ -306,8 +393,8 @@
         let currentUser = null;
         let currentUserDoc = null;
 
-        function getLogicalDateKey() {
-            const now = new Date();
+        function getLogicalDateKey(d = new Date()) {
+            const now = new Date(d);
             if (now.getHours() < 3) {
                 now.setDate(now.getDate() - 1);
             }
@@ -427,6 +514,8 @@
             }
 
             if (tabId === 'tabAdmin') loadAdminUserList();
+            if (tabId === 'tabDashboard') loadDashboardData();
+            if (tabId === 'tabLeaderboard') loadLeaderboardData();
         };
 
         function initApp() {
@@ -465,7 +554,10 @@
                 startTime: now,
                 targetMinutes: selectedMinutes,
                 expectedEndTime: targetEndTime,
-                status: 'IN_PROGRESS'
+                status: 'IN_PROGRESS',
+                lastCheckedHourIndex: 0,
+                midCheckActive: false,
+                midCheckTriggerTime: null
             };
             localStorage.setItem('onyang_active_session', JSON.stringify(sessionData));
             checkActiveStudySession();
@@ -504,6 +596,36 @@
             setupControls.classList.add('hidden');
             activeControls.classList.remove('hidden');
 
+            // --- 4. 2시간 이상 타이머 중간 점검 로직 ---
+            if (session.targetMinutes >= 120) {
+                const elapsedHours = Math.floor(elapsedMs / (60 * 60 * 1000));
+                
+                // 1시간마다 중간점검 트리거 발생
+                if (elapsedHours > (session.lastCheckedHourIndex || 0) && now < session.expectedEndTime) {
+                    session.lastCheckedHourIndex = elapsedHours;
+                    session.midCheckActive = true;
+                    session.midCheckTriggerTime = now;
+                    localStorage.setItem('onyang_active_session', JSON.stringify(session));
+                }
+
+                // 중간점검 활성화 상태일 때 15분 미응답 검사
+                if (session.midCheckActive) {
+                    if (now > session.midCheckTriggerTime + gracePeriodMs) {
+                        document.getElementById('modalMidCheck').classList.add('hidden');
+                        badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-rose-100 text-rose-600";
+                        badge.innerText = "무효 처리됨 (중간 점검 미확인)";
+                        display.innerText = "EXPIRED";
+                        alert("중간 점검 후 15분 동안 확인하지 않아 공부 기록이 무효 처리되었습니다.");
+                        saveStudyLog(session, 'INVALID');
+                        localStorage.removeItem('onyang_active_session');
+                        return;
+                    } else {
+                        document.getElementById('modalMidCheck').classList.remove('hidden');
+                    }
+                }
+            }
+
+            // --- 세션 종료 유예시간 검사 ---
             if (now > session.expectedEndTime + gracePeriodMs) {
                 badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-rose-100 text-rose-600";
                 badge.innerText = "무효 처리됨 (시간 초과)";
@@ -539,6 +661,16 @@
 
             display.innerText = (now >= session.expectedEndTime) ? `+${hrs}:${mins}:${secs}` : `${hrs}:${mins}:${secs}`;
         }
+
+        window.confirmMidCheck = function() {
+            const sessionRaw = localStorage.getItem('onyang_active_session');
+            if (!sessionRaw) return;
+            const session = JSON.parse(sessionRaw);
+            session.midCheckActive = false;
+            session.midCheckTriggerTime = null;
+            localStorage.setItem('onyang_active_session', JSON.stringify(session));
+            document.getElementById('modalMidCheck').classList.add('hidden');
+        };
 
         window.completeStudySession = async function() {
             const sessionRaw = localStorage.getItem('onyang_active_session');
@@ -587,6 +719,112 @@
             const hrs = Math.floor(totalMins / 60);
             const mins = totalMins % 60;
             document.getElementById('txtTodayStudyTime').innerText = `${hrs}시간 ${mins}분`;
+        }
+
+        // --- 2. 개인별 대시보드 데이터 로드 ---
+        async function loadDashboardData() {
+            if (!currentUser) return;
+            
+            const now = new Date();
+            const past7Days = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            const past30Days = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            // 학습 시간 집계
+            const querySnapshot = await getDocs(collection(db, 'study_logs'));
+            let weeklyMins = 0;
+            let monthlyMins = 0;
+
+            querySnapshot.forEach(docSnap => {
+                const log = docSnap.data();
+                if (log.uid === currentUser.uid && log.status === 'COMPLETED') {
+                    const logTime = log.startTime || 0;
+                    const mins = parseInt(log.targetMinutes, 10) || 0;
+
+                    if (logTime >= past7Days.getTime()) weeklyMins += mins;
+                    if (logTime >= past30Days.getTime()) monthlyMins += mins;
+                }
+            });
+
+            document.getElementById('dashWeeklyStudyTime').innerText = `${Math.floor(weeklyMins / 60)}시간 ${weeklyMins % 60}분`;
+            document.getElementById('dashMonthlyStudyTime').innerText = `${Math.floor(monthlyMins / 60)}시간 ${monthlyMins % 60}분`;
+
+            // 플래너 달성률 100% 일수 집계
+            const tasksSnap = await getDocs(collection(db, 'planners', currentUser.uid, 'tasks'));
+            const dateMap = {};
+
+            tasksSnap.forEach(d => {
+                const task = d.data();
+                if (!dateMap[task.dateKey]) {
+                    dateMap[task.dateKey] = { total: 0, completed: 0 };
+                }
+                dateMap[task.dateKey].total += 1;
+                if (task.isCompleted) dateMap[task.dateKey].completed += 1;
+            });
+
+            let perfectDays = 0;
+            Object.values(dateMap).forEach(day => {
+                if (day.total > 0 && day.total === day.completed) {
+                    perfectDays += 1;
+                }
+            });
+
+            document.getElementById('dashPerfectPlannerDays').innerText = `${perfectDays} 일`;
+        }
+
+        // --- 3. 순위표 데이터 로드 ---
+        async function loadLeaderboardData() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            try {
+                const usersSnap = await getDocs(collection(db, 'users'));
+                const approvedUsers = [];
+                usersSnap.forEach(d => {
+                    const u = d.data();
+                    if (u.approved) {
+                        approvedUsers.push({ uid: u.uid, name: u.name, studentId: u.studentId });
+                    }
+                });
+
+                const logsSnap = await getDocs(collection(db, 'study_logs'));
+                const userTimeMap = {};
+
+                logsSnap.forEach(d => {
+                    const log = d.data();
+                    if (log.status === 'COMPLETED') {
+                        userTimeMap[log.uid] = (userTimeMap[log.uid] || 0) + (parseInt(log.targetMinutes, 10) || 0);
+                    }
+                });
+
+                const rankingList = approvedUsers.map(user => ({
+                    ...user,
+                    totalMins: userTimeMap[user.uid] || 0
+                })).sort((a, b) => b.totalMins - a.totalMins);
+
+                if (rankingList.length === 0) {
+                    leaderboardList.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-400">등록된 학생 데이터가 없습니다.</td></tr>`;
+                    return;
+                }
+
+                leaderboardList.innerHTML = rankingList.map((st, idx) => {
+                    const hrs = Math.floor(st.totalMins / 60);
+                    const mins = st.totalMins % 60;
+                    let rankBadge = `<span class="font-bold text-slate-600">${idx + 1}위</span>`;
+                    if (idx === 0) rankBadge = `<span class="bg-amber-400 text-indigo-950 px-2.5 py-1 rounded-full font-extrabold text-xs"><i class="fa-solid fa-crown mr-1"></i>1위</span>`;
+                    if (idx === 1) rankBadge = `<span class="bg-slate-300 text-slate-800 px-2.5 py-1 rounded-full font-bold text-xs">2위</span>`;
+                    if (idx === 2) rankBadge = `<span class="bg-amber-700 text-white px-2.5 py-1 rounded-full font-bold text-xs">3위</span>`;
+
+                    return `
+                        <tr class="border-b bg-white hover:bg-slate-50 transition">
+                            <td class="px-4 py-3">${rankBadge}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-800">${st.studentId || ''} ${st.name || '학생'}</td>
+                            <td class="px-4 py-3 font-bold text-indigo-600">${hrs}시간 ${mins}분</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Leaderboard Error:", err);
+                leaderboardList.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-400">랭킹을 불러오는데 실패했습니다.</td></tr>`;
+            }
         }
 
         let tasks = [];
@@ -686,7 +924,6 @@
             const mlsnYmd = `${yyyy}${mm}${dd}`;
 
             const apiKey = "2384316c27554b269d122326f94a79d6";
-            // 온양고등학교 진짜 행정표준코드 8140061 적용
             const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=N10&SD_SCHUL_CODE=8140061&MLSV_YMD=${mlsnYmd}`;
 
             try {
