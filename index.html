@@ -120,75 +120,44 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                        <span id="timerStatusBadge" class="absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600">대기 중</span>
+                <!-- 타이머 영역을 좌우 전체 넓게(1열) 배치 -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <span id="timerStatusBadge" class="absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600">대기 중</span>
 
-                        <div class="my-6">
-                            <div id="timerDisplay" class="text-6xl md:text-7xl font-extrabold tracking-tight text-slate-800 font-mono">00:00:00</div>
-                            <p id="timerSubText" class="text-sm text-slate-400 mt-2">목표 시간을 설정하고 공부를 시작하세요.</p>
-                        </div>
-
-                        <!-- Timer Setup: 5-Minute Adjustment Slider -->
-                        <div id="timerSetupControls" class="w-full max-w-sm space-y-4">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">목표 시간 설정 (5분 단위)</label>
-                            
-                            <div class="flex items-center justify-center space-x-3">
-                                <button onclick="window.adjustMinutes(-5)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-lg text-sm">- 5분</button>
-                                <span id="lblTargetMinutes" class="text-2xl font-extrabold text-indigo-600 w-24">30분</span>
-                                <button onclick="window.adjustMinutes(5)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-lg text-sm">+ 5분</button>
-                            </div>
-
-                            <input type="range" id="sliderTargetMinutes" min="5" max="300" step="5" value="30" oninput="window.setTargetMinutesFromSlider(this.value)" class="w-full accent-indigo-600 cursor-pointer">
-
-                            <button onclick="window.startStudySession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">공부 시작</button>
-                        </div>
-
-                        <!-- Active Controls -->
-                        <div id="timerActiveControls" class="hidden w-full max-w-sm space-y-3">
-                            <button id="btnCompleteSession" onclick="window.completeStudySession()" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3 rounded-xl shadow transition text-lg">
-                                <i class="fa-solid fa-lock mr-2"></i> 공부 진행 중 (완료 불가)
-                            </button>
-                            <p id="activeControlsHint" class="text-xs text-slate-500 font-medium">설정한 목표 시간이 종료되면 완료 버튼이 활성화됩니다.</p>
-                        </div>
+                    <div class="my-6">
+                        <div id="timerDisplay" class="text-6xl md:text-8xl font-extrabold tracking-tight text-slate-800 font-mono">00:00:00</div>
+                        <p id="timerSubText" class="text-sm text-slate-400 mt-2">목표 시간을 설정하고 공부를 시작하세요.</p>
                     </div>
 
-                    <!-- 1. 타이머 유의사항 (접기/펼치기 간결화) -->
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg mb-3 flex items-center justify-between">
-                                <span><i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> 타이머 안내</span>
-                            </h3>
-                            
-                            <details class="group border border-slate-200 rounded-xl p-3 bg-slate-50 cursor-pointer">
-                                <summary class="font-bold text-xs text-slate-700 flex justify-between items-center select-none">
-                                    <span>유의사항 세부 사항 보기</span>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
-                                </summary>
-                                <ul class="text-xs text-slate-600 space-y-3 list-none mt-3 pt-3 border-t border-slate-200">
-                                    <li class="flex items-start gap-2">
-                                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
-                                        <span><strong>중도 종료 불가:</strong> 집중 유지를 위해 타이머 작동 중에는 중간에 완료할 수 없습니다.</span>
-                                    </li>
-                                    <li class="flex items-start gap-2">
-                                        <i class="fa-solid fa-clock text-indigo-500 mt-0.5"></i>
-                                        <span><strong>2시간 이상 타이머:</strong> 1시간마다 중간 점검이 진행되며 15분 내 미확인 시 무효 처리됩니다.</span>
-                                    </li>
-                                    <li class="flex items-start gap-2">
-                                        <i class="fa-solid fa-window-restore text-indigo-500 mt-0.5"></i>
-                                        <span><strong>창 닫기 가능:</strong> 타이머는 서버/백그라운드 시간 기준 작동하여 브라우저를 닫아도 시간이 차감됩니다.</span>
-                                    </li>
-                                    <li class="flex items-start gap-2">
-                                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
-                                        <span><strong>15분 유예 시간:</strong> 목표 시간 달성 후 15분 내 완료하지 않으면 자동 무효 처리됩니다.</span>
-                                    </li>
-                                    <li class="flex items-start gap-2">
-                                        <i class="fa-solid fa-moon text-indigo-700 mt-0.5"></i>
-                                        <span><strong>새벽 3시 리셋:</strong> 매일 새벽 3시가 되면 '오늘의 순공시간'이 0분으로 초기화됩니다.</span>
-                                    </li>
-                                </ul>
-                            </details>
+                    <!-- Timer Setup: 5-Minute Adjustment Slider -->
+                    <div id="timerSetupControls" class="w-full max-w-md space-y-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">목표 시간 설정 (5분 단위)</label>
+                        
+                        <div class="flex items-center justify-center space-x-3">
+                            <button onclick="window.adjustMinutes(-5)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-lg text-sm">- 5분</button>
+                            <span id="lblTargetMinutes" class="text-2xl font-extrabold text-indigo-600 w-24">30분</span>
+                            <button onclick="window.adjustMinutes(5)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-lg text-sm">+ 5분</button>
                         </div>
+
+                        <input type="range" id="sliderTargetMinutes" min="5" max="300" step="5" value="30" oninput="window.setTargetMinutesFromSlider(this.value)" class="w-full accent-indigo-600 cursor-pointer">
+
+                        <button onclick="window.startStudySession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition text-base">공부 시작</button>
+                    </div>
+
+                    <!-- Active Controls -->
+                    <div id="timerActiveControls" class="hidden w-full max-w-md space-y-3">
+                        <button id="btnCompleteSession" onclick="window.completeStudySession()" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-xl shadow transition text-lg">
+                            <i class="fa-solid fa-lock mr-2"></i> 공부 진행 중 (완료 불가)
+                        </button>
+                        <p id="activeControlsHint" class="text-xs text-slate-500 font-medium">설정한 목표 시간이 종료되면 완료 버튼이 활성화됩니다.</p>
+                    </div>
+
+                    <!-- 유의사항 ? 버튼 (타이머 하단 간결한 글씨) -->
+                    <div class="mt-8 text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                        <span>유의사항</span>
+                        <button onclick="window.openNoticeModal()" class="w-5 h-5 bg-slate-200 hover:bg-indigo-600 hover:text-white rounded-full font-bold transition flex items-center justify-center text-slate-600" title="유의사항 보기">
+                            ?
+                        </button>
                     </div>
                 </div>
             </div>
@@ -223,7 +192,7 @@
                 </div>
             </div>
 
-            <!-- 2. TAB 3: PERSONAL DASHBOARD (개인별 공부 기록) -->
+            <!-- TAB 3: PERSONAL DASHBOARD -->
             <div id="tabDashboard" class="tab-content space-y-6">
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-slate-800 mb-2"><i class="fa-solid fa-chart-pie text-indigo-600 mr-2"></i>개인별 공부 기록 대시보드</h3>
@@ -246,7 +215,7 @@
                 </div>
             </div>
 
-            <!-- 3. TAB 4: LEADERBOARD (순위표) -->
+            <!-- TAB 4: LEADERBOARD -->
             <div id="tabLeaderboard" class="tab-content space-y-6">
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center mb-6">
@@ -346,7 +315,46 @@
 
     </main>
 
-    <!-- 4. 중간 점검 모달 (2시간 이상 타이머용) -->
+    <!-- 유의사항 모달 팝업 (? 버튼 클릭 시 표시) -->
+    <div id="modalNotice" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-left">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-indigo-600"></i> 타이머 이용 유의사항
+                </h3>
+                <button onclick="window.closeNoticeModal()" class="text-slate-400 hover:text-slate-600 text-sm font-bold">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <ul class="text-xs text-slate-600 space-y-3 leading-relaxed">
+                <li class="flex items-start gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                    <span><strong>중도 종료 불가:</strong> 집중 유지를 위해 타이머 작동 중에는 중간에 완료할 수 없습니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fa-solid fa-clock text-indigo-500 mt-0.5"></i>
+                    <span><strong>2시간 이상 타이머:</strong> 1시간마다 중간 점검(45분 집중, 10분 휴식 권장)이 진행되며 15분 내 미확인 시 무효 처리됩니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fa-solid fa-window-restore text-indigo-500 mt-0.5"></i>
+                    <span><strong>창 닫기 가능:</strong> 타이머는 서버/백그라운드 시간 기준 작동하여 브라우저를 닫아도 시간이 차감됩니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                    <span><strong>15분 유예 시간:</strong> 목표 시간 달성 후 15분 내 완료하지 않으면 자동 무효 처리됩니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fa-solid fa-moon text-indigo-700 mt-0.5"></i>
+                    <span><strong>새벽 3시 리셋:</strong> 매일 새벽 3시가 되면 '오늘의 순공시간'이 0분으로 초기화됩니다.</span>
+                </li>
+            </ul>
+            <button onclick="window.closeNoticeModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition text-sm">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- 중간 점검 모달 (2시간 이상 타이머용) -->
     <div id="modalMidCheck" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4 border border-indigo-100">
             <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto text-2xl">
@@ -530,6 +538,14 @@
         let timerInterval = null;
         const GRACE_PERIOD_MINUTES = 15;
 
+        window.openNoticeModal = function() {
+            document.getElementById('modalNotice').classList.remove('hidden');
+        };
+
+        window.closeNoticeModal = function() {
+            document.getElementById('modalNotice').classList.add('hidden');
+        };
+
         window.adjustMinutes = function(delta) {
             let newVal = selectedMinutes + delta;
             if (newVal < 5) newVal = 5;
@@ -596,11 +612,10 @@
             setupControls.classList.add('hidden');
             activeControls.classList.remove('hidden');
 
-            // --- 4. 2시간 이상 타이머 중간 점검 로직 ---
+            // --- 2시간 이상 타이머 중간 점검 로직 ---
             if (session.targetMinutes >= 120) {
                 const elapsedHours = Math.floor(elapsedMs / (60 * 60 * 1000));
                 
-                // 1시간마다 중간점검 트리거 발생
                 if (elapsedHours > (session.lastCheckedHourIndex || 0) && now < session.expectedEndTime) {
                     session.lastCheckedHourIndex = elapsedHours;
                     session.midCheckActive = true;
@@ -608,7 +623,6 @@
                     localStorage.setItem('onyang_active_session', JSON.stringify(session));
                 }
 
-                // 중간점검 활성화 상태일 때 15분 미응답 검사
                 if (session.midCheckActive) {
                     if (now > session.midCheckTriggerTime + gracePeriodMs) {
                         document.getElementById('modalMidCheck').classList.add('hidden');
@@ -641,7 +655,7 @@
                 badge.innerText = "목표 달성! 완료 및 저장 가능";
 
                 btnComplete.disabled = false;
-                btnComplete.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg cursor-pointer";
+                btnComplete.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition text-lg cursor-pointer";
                 btnComplete.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> 공부 완료 및 저장`;
                 hintText.innerText = "목표를 달성했습니다! 15분 이내에 [공부 완료 및 저장] 버튼을 누르세요.";
             } else {
@@ -649,7 +663,7 @@
                 badge.innerText = "공부 진행 중";
 
                 btnComplete.disabled = true;
-                btnComplete.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3 rounded-xl shadow transition text-lg";
+                btnComplete.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-xl shadow transition text-lg";
                 btnComplete.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> 공부 진행 중 (완료 불가)`;
                 hintText.innerText = "집중 유지를 위해 목표 시간이 끝날 때까지 완료 버튼을 누를 수 없습니다.";
             }
@@ -721,7 +735,6 @@
             document.getElementById('txtTodayStudyTime').innerText = `${hrs}시간 ${mins}분`;
         }
 
-        // --- 2. 개인별 대시보드 데이터 로드 ---
         async function loadDashboardData() {
             if (!currentUser) return;
             
@@ -729,7 +742,6 @@
             const past7Days = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
             const past30Days = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
             
-            // 학습 시간 집계
             const querySnapshot = await getDocs(collection(db, 'study_logs'));
             let weeklyMins = 0;
             let monthlyMins = 0;
@@ -748,7 +760,6 @@
             document.getElementById('dashWeeklyStudyTime').innerText = `${Math.floor(weeklyMins / 60)}시간 ${weeklyMins % 60}분`;
             document.getElementById('dashMonthlyStudyTime').innerText = `${Math.floor(monthlyMins / 60)}시간 ${monthlyMins % 60}분`;
 
-            // 플래너 달성률 100% 일수 집계
             const tasksSnap = await getDocs(collection(db, 'planners', currentUser.uid, 'tasks'));
             const dateMap = {};
 
@@ -771,7 +782,6 @@
             document.getElementById('dashPerfectPlannerDays').innerText = `${perfectDays} 일`;
         }
 
-        // --- 3. 순위표 데이터 로드 ---
         async function loadLeaderboardData() {
             const leaderboardList = document.getElementById('leaderboardList');
             
@@ -912,7 +922,6 @@
             document.getElementById('barDailyProgress').style.width = `${percent}%`;
         }
 
-        // --- NEIS MEAL API (온양고등학교 표준 코드 8140061 적용) ---
         async function fetchNeisMeals() {
             const container = document.getElementById('mealContainer');
             const loading = document.getElementById('mealLoading');
