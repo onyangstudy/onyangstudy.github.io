@@ -120,7 +120,6 @@
                     </div>
                 </div>
 
-                <!-- 타이머 영역을 좌우 전체 넓게(1열) 배치 -->
                 <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
                     <span id="timerStatusBadge" class="absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600">대기 중</span>
 
@@ -152,7 +151,7 @@
                         <p id="activeControlsHint" class="text-xs text-slate-500 font-medium">설정한 목표 시간이 종료되면 완료 버튼이 활성화됩니다.</p>
                     </div>
 
-                    <!-- 유의사항 ? 버튼 (타이머 하단 간결한 글씨) -->
+                    <!-- 유의사항 ? 버튼 -->
                     <div class="mt-8 text-xs text-slate-400 flex items-center justify-center gap-1.5">
                         <span>유의사항</span>
                         <button onclick="window.openNoticeModal()" class="w-5 h-5 bg-slate-200 hover:bg-indigo-600 hover:text-white rounded-full font-bold transition flex items-center justify-center text-slate-600" title="유의사항 보기">
@@ -268,21 +267,54 @@
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-200 space-y-6">
                     <div>
                         <h3 class="text-lg font-bold text-rose-900 mb-2"><i class="fa-solid fa-sliders text-rose-600 mr-2"></i>학교 일정 & 야자 안내 관리</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">오늘의 야자 운영 상태</label>
-                                <input type="text" id="adminYajaStatus" placeholder="예: 정상 운영 (19:00 ~ 21:00)" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 outline-none">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">야자 배지 텍스트</label>
-                                <input type="text" id="adminYajaBadge" placeholder="예: 운영, 단축, 미운영" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+                        
+                        <!-- 입력 폼과 미리보기 영역을 좌우로 배치 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 설정 입력 폼 -->
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <h4 class="text-xs font-extrabold text-indigo-900 uppercase tracking-wider mb-2">✏️ 내용 수정 입력창</h4>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">오늘의 야자 운영 상태</label>
+                                    <input type="text" id="adminYajaStatus" oninput="window.updateAdminPreview()" placeholder="예: 정상 운영 (19:00 ~ 21:00)" class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">야자 배지 텍스트</label>
+                                    <input type="text" id="adminYajaBadge" oninput="window.updateAdminPreview()" placeholder="예: 운영, 단축, 미운영" class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">주요 일정 (제목)</label>
+                                    <input type="text" id="adminScheduleTitle" oninput="window.updateAdminPreview()" placeholder="예: 2학기 기말고사" class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">주요 일정 (날짜 및 상세)</label>
+                                    <input type="text" id="adminScheduleDetail" oninput="window.updateAdminPreview()" placeholder="예: 2026.11.15 / 시험 기간 집중 학습" class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white">
+                                </div>
+                                <button onclick="window.saveSchoolInfoSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-lg transition shadow">서버에 최종 업데이트 저장</button>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">주요 일정 (제목)</label>
-                                <input type="text" id="adminScheduleTitle" placeholder="예: 2학기 기말고사" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 outline-none">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">주요 일정 (날짜 및 상세)</label>
-                                <input type="text" id="adminScheduleDetail" placeholder="예: 2026.11.15 / 시험 기간 집중 학습" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
-                            </div>
-                            <div class="md:col-span-2">
-                                <button onclick="window.saveSchoolInfoSettings()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition">안내 및 일정 업데이트</button>
+
+                            <!-- 학생 화면 실시간 미리보기 박스 -->
+                            <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-200 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="text-xs font-extrabold text-indigo-900 uppercase tracking-wider">👀 학생 화면 실시간 미리보기</h4>
+                                        <span class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold">Live Preview</span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="p-3 bg-white rounded-xl border border-indigo-100 flex justify-between items-center shadow-sm">
+                                            <div>
+                                                <span class="text-xs font-bold text-indigo-600 block">오늘의 야자(야간자율학습)</span>
+                                                <span id="previewYajaStatus" class="text-sm font-bold text-slate-800">-</span>
+                                            </div>
+                                            <span id="previewYajaBadge" class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold">-</span>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                            <span class="text-xs font-semibold text-indigo-600 block mb-1"><i class="fa-solid fa-star mr-1"></i>주요 학교 일정</span>
+                                            <h4 id="previewScheduleTitle" class="text-sm font-bold text-slate-700">-</h4>
+                                            <p id="previewScheduleDetail" class="text-xs text-slate-500">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-3 text-center">* 입력창에 타이핑하는 즉시 학생들에게 어떻게 보일지 반영됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -315,7 +347,7 @@
 
     </main>
 
-    <!-- 유의사항 모달 팝업 (? 버튼 클릭 시 표시) -->
+    <!-- 유의사항 모달 팝업 -->
     <div id="modalNotice" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-left">
             <div class="flex justify-between items-center border-b pb-3">
@@ -612,7 +644,6 @@
             setupControls.classList.add('hidden');
             activeControls.classList.remove('hidden');
 
-            // --- 2시간 이상 타이머 중간 점검 로직 ---
             if (session.targetMinutes >= 120) {
                 const elapsedHours = Math.floor(elapsedMs / (60 * 60 * 1000));
                 
@@ -639,7 +670,6 @@
                 }
             }
 
-            // --- 세션 종료 유예시간 검사 ---
             if (now > session.expectedEndTime + gracePeriodMs) {
                 badge.className = "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full bg-rose-100 text-rose-600";
                 badge.innerText = "무효 처리됨 (시간 초과)";
@@ -665,7 +695,7 @@
                 btnComplete.disabled = true;
                 btnComplete.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-xl shadow transition text-lg";
                 btnComplete.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> 공부 진행 중 (완료 불가)`;
-                hintText.innerText = "집중 유지를 위해 목표 시간이 끝날 때까지 완료 버튼을 누를 수 없습니다.";
+                hintText.innerText = "집중 유지를 위해 목표 시간이 끝날 때까지 완료 버튼을 누할 수 없습니다.";
             }
 
             const diffSec = Math.floor(Math.abs(targetMs - elapsedMs) / 1000);
@@ -964,6 +994,19 @@
             }
         }
 
+        // 실시간 미리보기 업데이트 함수
+        window.updateAdminPreview = function() {
+            const yajaStatus = document.getElementById('adminYajaStatus').value.trim() || '야자 상태 입력 대기 중...';
+            const yajaBadge = document.getElementById('adminYajaBadge').value.trim() || '배지';
+            const scheduleTitle = document.getElementById('adminScheduleTitle').value.trim() || '일정 제목 입력 대기 중...';
+            const scheduleDetail = document.getElementById('adminScheduleDetail').value.trim() || '날짜 및 상세 내용 입력 대기 중...';
+
+            document.getElementById('previewYajaStatus').innerText = yajaStatus;
+            document.getElementById('previewYajaBadge').innerText = yajaBadge;
+            document.getElementById('previewScheduleTitle').innerText = scheduleTitle;
+            document.getElementById('previewScheduleDetail').innerText = scheduleDetail;
+        };
+
         async function loadSchoolInfoSchedule() {
             const container = document.getElementById('scheduleContainer');
             try {
@@ -987,6 +1030,9 @@
                 document.getElementById('adminYajaBadge').value = yajaBadge;
                 document.getElementById('adminScheduleTitle').value = scheduleTitle;
                 document.getElementById('adminScheduleDetail').value = scheduleDetail;
+
+                // 입력 필드가 로드된 후 미리보기 동기화
+                window.updateAdminPreview();
 
                 container.innerHTML = `
                     <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
